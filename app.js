@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxVp_EvSdwaqsITX4OHVFERJ1ab7ic3jLeOoRYYbun0KZLFauTY5iu5mNgzoDhg2Hsc/exec';
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyfp0QSdZlmFjl2tnoOIhUyPu93SEgaLKL4XVVNwV4ofmXNZ6uzwCUN8Rmnpt-lHZlgkg/exec';
   let exercises = [], week, day;
   let currentExercise = 0, currentSet = 1, currentRecTime = 0, timerInterval;
 
