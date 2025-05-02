@@ -1,0 +1,120 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #f4f4f9;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 320px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.loading .spinner {
+  margin: 20px auto 0;
+  width: 40px; height: 40px;
+  border: 4px solid #ddd;
+  border-top: 4px solid #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.exercise-name-box {
+  background: #f0f0f5;
+  padding: 8px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 1em;
+}
+
+.img-container {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-set-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.nav-set-container .nav-btn {
+  margin: 0 8px;
+  font-size: 1.8em;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.inputs-container input {
+  width: calc(50% - 10px);
+  margin: 5px;
+  padding: 10px;
+  font-size: 1em;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+.buttons-container button {
+  flex: 1;
+  margin: 0 5px;
+  padding: 10px;
+  font-size: 1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #4a90e2;
+  color: #fff;
+}
+.buttons-container #reset-btn {
+  background: #e24a4a;
+}
+
+.exercise-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95em;
+}
+
+.footer {
+  font-size: 0.85em;
+  color: #999;
+  text-align: center;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.note-box {
+  background: #eef;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  margin: 8px 0;
+  text-align: center;
+}

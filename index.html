@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gym Tracker</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <!-- Login Card -->
+  <div id="init-card" class="card">
+    <h1>🔐 Login</h1>
+    <input id="key-input" type="password" placeholder="Inserisci chiave" />
+    <button id="login-btn">Login</button>
+  </div>
+
+  <!-- Selezione Settimana/Giorno -->
+  <div id="select-card" class="card" style="display:none;">
+    <h1>📅 Seleziona</h1>
+    <input id="week-input" type="number" placeholder="Settimana (#)" min="1"/>
+    <select id="day-input">
+      <option value="" disabled selected>Seleziona giorno</option>
+      <option value="Lunedì">Lunedì</option>
+      <option value="Mercoledì">Mercoledì</option>
+      <option value="Venerdì">Venerdì</option>
+    </select>
+    <button id="start-btn">Inizia Allenamento</button>
+  </div>
+
+  <!-- Loading View -->
+  <div id="loading-view" class="card loading" style="display:none;">
+    <h1>BENVENUTO! Caricamento in corso...</h1>
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Access Denied -->
+  <div id="deny-card" class="card" style="display:none; background: #f44336; color: #fff;">
+    <h1>ACCESSO NEGATO</h1>
+    <button id="retry-btn">Ritenta Login</button>
+  </div>
+
+  <!-- App Card -->
+  <div id="app-card" class="card" style="display:none;">
+    <h2>🏋️‍♂️ Allenamento</h2>
+    <p id="week-display">Settimana #</p>
+    <div id="exercise-counter">Esercizio 1 di 1</div>
+
+    <div class="exercise-name-box">
+      <span id="exercise-name">Esercizio</span>
+    </div>
+    <div class="img-container">
+      <img id="exercise-img" src="images/default.jpg" alt="Esercizio"/>
+    </div>
+  <!-- NUOVA SEZIONE NOTE -->
+    <p id="note-display" class="note-box">Note: ND</p>
+    <p id="prev-display">Precedente: –</p>
+    <p id="series-display">Serie 1 di 1</p>
+
+    <div class="nav-set-container">
+      <button class="nav-btn" id="prev-set-btn">↶</button>
+      <button class="nav-btn" id="prev-btn">←</button>
+      <button class="nav-btn" id="next-set-btn">↷</button>
+      <button class="nav-btn" id="skip-btn">→</button>
+    </div>
+
+    <div class="inputs-container">
+      <input id="weight" type="number" placeholder="Peso (kg)" />
+      <input id="reps"   type="number" placeholder="Ripetizioni" />
+    </div>
+    <div class="buttons-container">
+      <button id="save-btn">Salva Set</button>
+      <button id="reset-btn">Annulla Allenamenti</button>
+    </div>
+
+    <div id="timer" style="display:none;">
+      <h3>Recupero:</h3>
+      <p id="countdown">00:00.000</p>
+    </div>
+
+    <button id="list-btn">📋 Lista esercizi</button>
+  </div>
+
+  <!-- List Card -->
+  <div id="list-card" class="card" style="display:none;">
+    <h2>📋 Lista esercizi</h2>
+    <ul id="exercise-list"></ul>
+    <button id="back-app-btn">🔙 Torna</button>
+  </div>
+
+  <footer class="footer">Versione 1.0.0 © 2025 by Nicola Panzarino</footer>
+  <script src="app.js"></script>
+</body>
+</html>
