@@ -57,6 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('prev-btn').addEventListener('click', goBackExercise);
   document.getElementById('skip-btn').addEventListener('click', skipExercise);
+  
+  // SKIP BACK (senza cancellare dati)
+  document.getElementById('skip-back-btn').addEventListener('click', () => {
+    if (currentExercise > 0) {
+      currentExercise--;
+      currentSet = 1;
+      showExercise();
+    } else {
+      alert('Sei già al primo esercizio');
+    }
+  });
   document.getElementById('save-btn').addEventListener('click', submitSet);
   document.getElementById('reset-btn').addEventListener('click', resetAll);
 
