@@ -130,7 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
       `Precedente: ${ex.prevData}`;
     document.getElementById('series-display').textContent =
       `Serie ${currentSet} di ${ex.seriePreviste}`;
-  
+    // Superset: mostra o nascondi
+    const sp = document.getElementById('superset-panel');
+    if (ex.isSuperset) {
+    sp.style.display = 'block';
+    // pre-popola i campi se già inseriti
+    document.getElementById('sup-peso1').value = ex.lastPeso1 || '';
+    document.getElementById('sup-reps1').value = ex.lastReps1 || '';
+    document.getElementById('sup-peso2').value = ex.lastPeso2 || '';
+    document.getElementById('sup-reps2').value = ex.lastReps2 || '';
+      } else {
+      sp.style.display = 'none';
+      }
     // Imposto il timer in millisecondi
     currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
   
