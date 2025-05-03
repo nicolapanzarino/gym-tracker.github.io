@@ -140,33 +140,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // SALVA SET
   function submitSet() {
-    const peso = document.getElementById('weight').value;
-    const reps = document.getElementById('reps').value;
-    if (!peso || !reps) {
-      return alert('Compila peso e ripetizioni');
+    const ex = exercises[currentExercise];
+    // se NON è superset, usa la logica normale
+    if (!ex.isSuperset) {
+      const peso  = prompt("Peso (kg):");
+      const reps  = prompt("Ripetizioni:");
+      if (!peso || !reps) return alert("Compila i campi!");
+      const nuovo = confirm("Hai cambiato il peso?");
+      window.onSave = res => {
+        if (res.success) startTimer();
+        else alert("Errore salvataggio");
+      };
+      const s = document.createElement("script");
+      s.src = `${WEBAPP_URL}` +
+        `?callback=onSave` +
+        `&key=${encodeURIComponent(key)}` +
+        `&settimana=${week}` +
+        `&peso=${encodeURIComponent(peso)}` +
+        `&reps=${encodeURIComponent(reps)}` +
+        `&riga=${ex.riga}` +
+        `&nuovoPeso=${nuovo}`;
+      document.body.appendChild(s);
+      return;
     }
-    const nuovo = confirm('Hai cambiato il peso?');
   
+    // SE è superset → chiedo DUE volte peso+reps
+    const peso1 = prompt("Peso esercizio 1 (kg):");
+    const reps1 = prompt("Ripetizioni esercizio 1:");
+    const peso2 = prompt("Peso esercizio 2 (kg):");
+    const reps2 = prompt("Ripetizioni esercizio 2:");
+    if (!peso1||!reps1||!peso2||!reps2) return alert("Compila tutti i campi!");
+  
+    const nuovo = confirm("Hai cambiato almeno uno dei pesi?");
     window.onSave = res => {
-      if (res.success) {
-        // MARCO QUESTO ESERCIZIO COME FATTO
-        exercises[currentExercise].done = true;
-        renderList();
-        // PARTO IL TIMER
-        startTimer();
-      } else {
-        alert('Errore nel salvataggio');
-      }
+      if (res.success) startTimer();
+      else alert("Errore salvataggio superset");
     };
-  
-    const s = document.createElement('script');
+    const s = document.createElement("script");
     s.src = `${WEBAPP_URL}` +
       `?callback=onSave` +
-      `&key=${encodeURIComponent(document.getElementById('key-input').value)}` +
+      `&key=${encodeURIComponent(key)}` +
       `&settimana=${week}` +
-      `&peso=${encodeURIComponent(peso)}` +
-      `&reps=${encodeURIComponent(reps)}` +
-      `&riga=${exercises[currentExercise].riga}` +
+      `&peso1=${encodeURIComponent(peso1)}` +
+      `&reps1=${encodeURIComponent(reps1)}` +
+      `&peso2=${encodeURIComponent(peso2)}` +
+      `&reps2=${encodeURIComponent(reps2)}` +
+      `&riga=${ex.riga}` +
       `&nuovoPeso=${nuovo}`;
     document.body.appendChild(s);
   }
