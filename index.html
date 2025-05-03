@@ -48,32 +48,35 @@
     <div class="exercise-name-box">
       <span id="exercise-name">Esercizio</span>
     </div>
+
     <div class="img-container">
       <img id="exercise-img" src="images/default.jpg" alt="Esercizio"/>
     </div>
-  <!-- NUOVA SEZIONE NOTE -->
+
     <p id="note-display" class="note-box">Note: ND</p>
-    <p id="prev-display">Precedente: –</p>
-    <p id="series-display">Serie 1 di 1</p>
-  
-    <!-- Riquadro Superset (di default nascosto) -->
-  <div id="superset-panel" class="card superset" style="display:none; margin:10px 0;">
-    <h3>🔀 Superset</h3>
-    <div class="superset-inputs">
-      <div>
-        <label>Peso 1:</label>
-        <input type="number" id="sup-peso1" placeholder="kg">
-        <label>Rep 1:</label>
-        <input type="number" id="sup-reps1" placeholder="">
-      </div>
-      <div>
-        <label>Peso 2:</label>
-        <input type="number" id="sup-peso2" placeholder="kg">
-        <label>Rep 2:</label>
-        <input type="number" id="sup-reps2" placeholder="">
+
+    <!-- Superset Panel -->
+    <div id="superset-panel" class="card superset" style="display:none;">
+      <h3>🔀 Superset</h3>
+      <div class="superset-inputs">
+        <div>
+          <label>Peso 1:</label>
+          <input type="number" id="sup-peso1" placeholder="kg">
+          <label>Rep 1:</label>
+          <input type="number" id="sup-reps1" placeholder="">
+        </div>
+        <div>
+          <label>Peso 2:</label>
+          <input type="number" id="sup-peso2" placeholder="kg">
+          <label>Rep 2:</label>
+          <input type="number" id="sup-reps2" placeholder="">
+        </div>
       </div>
     </div>
-  </div>
+
+    <p id="prev-display">Precedente: –</p>
+    <p id="series-display">Serie 1 di 1</p>
+
     <div class="nav-set-container">
       <button class="nav-btn" id="skip-back-btn">⤺</button>
       <button class="nav-btn" id="prev-set-btn">↶</button>

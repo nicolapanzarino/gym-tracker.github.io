@@ -1,9 +1,8 @@
-// AA
-
 document.addEventListener('DOMContentLoaded', () => {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxVp_EvSdwaqsITX4OHVFERJ1ab7ic3jLeOoRYYbun0KZLFauTY5iu5mNgzoDhg2Hsc/exec';
   let exercises = [], week, day;
   let currentExercise = 0, currentSet = 1, currentRecTime = 0, timerInterval;
+  const keyInput = () => document.getElementById('key-input').value.trim();
 
   const initCard   = document.getElementById('init-card');
   const selectCard = document.getElementById('select-card');
@@ -23,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // LOGIN
   document.getElementById('login-btn').addEventListener('click', () => {
-    const key = document.getElementById('key-input').value.trim();
+    const key = keyInput();
     if (!key) return alert('Inserisci chiave');
     window.onAuth = res => {
       if (res.error==='Unauthorized') showView('deny');
@@ -37,42 +36,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // SELEZIONE SETTIMANA/GIORNO
   document.getElementById('start-btn').addEventListener('click', () => {
-    const keyVal = document.getElementById('key-input').value.trim();
     week = parseInt(document.getElementById('week-input').value,10);
     day  = document.getElementById('day-input').value;
-    if (!week || !day) return alert('Inserisci settimana e giorno');
-    fetchExercises(keyVal, week, day);
+    if (!week||!day) return alert('Inserisci settimana e giorno');
+    fetchExercises();
   });
 
   // NAVIGAZIONE
   document.getElementById('list-btn').addEventListener('click', () => showView('list'));
   document.getElementById('back-app-btn').addEventListener('click', () => showView('app'));
+  document.getElementById('skip-back-btn').addEventListener('click', () => {
+    if (currentExercise>0) { currentExercise--; currentSet=1; refreshAndShow(); }
+    else alert('Sei già al primo esercizio');
+  });
   document.getElementById('prev-set-btn').addEventListener('click', () => {
-    if (currentSet > 1) { currentSet--; showExercise(); }
+    if (currentSet>1) { currentSet--; refreshAndShow(); }
     else alert('Sei già alla prima serie');
   });
+  document.getElementById('prev-btn').addEventListener('click', goBackExercise);
   document.getElementById('next-set-btn').addEventListener('click', () => {
-    if (currentSet < exercises[currentExercise].seriePreviste) { currentSet++; showExercise(); }
+    if (currentSet<exercises[currentExercise].seriePreviste) { currentSet++; refreshAndShow(); }
     else alert('Sei già all\'ultima serie');
   });
-  document.getElementById('prev-btn').addEventListener('click', goBackExercise);
-  document.getElementById('skip-btn').addEventListener('click', skipExercise);
-  
-  // SKIP BACK (senza cancellare dati)
-  document.getElementById('skip-back-btn').addEventListener('click', () => {
-    if (currentExercise > 0) {
-      currentExercise--;
-      currentSet = 1;
-      showExercise();
-    } else {
-      alert('Sei già al primo esercizio');
-    }
+  document.getElementById('skip-btn').addEventListener('click', () => {
+    if (currentExercise<exercises.length-1) { currentExercise++; currentSet=1; refreshAndShow(); }
+    else alert('🏁 Fine allenamento');
   });
   document.getElementById('save-btn').addEventListener('click', submitSet);
   document.getElementById('reset-btn').addEventListener('click', resetAll);
 
-  // FETCH ESERCIZI
-  function fetchExercises(keyVal, wk, dy) {
+  function fetchExercises() {
     showView('load');
     window.onExercises = data => {
       if (data.error==='Unauthorized') return showView('deny');
@@ -82,216 +75,137 @@ document.addEventListener('DOMContentLoaded', () => {
       showExercise();
     };
     const scr = document.createElement('script');
-    scr.src = `${WEBAPP_URL}` +
-      `?callback=onExercises` +
-      `&key=${encodeURIComponent(keyVal)}` +
-      `&settimana=${wk}` +
-      `&giorno=${encodeURIComponent(dy)}`;
+    scr.src = `${WEBAPP_URL}`
+            + `?callback=onExercises`
+            + `&key=${encodeURIComponent(keyInput())}`
+            + `&settimana=${week}`
+            + `&giorno=${encodeURIComponent(day)}`;
     document.body.appendChild(scr);
   }
 
-  // RENDER LISTA
+  function refreshAndShow() {
+    fetchExercises();
+  }
+
   function renderList() {
-    const ul = document.getElementById('exercise-list');
-    ul.innerHTML = '';
+    const ul = document.getElementById('exercise-list'); ul.innerHTML='';
     exercises.forEach(ex => {
-      const li = document.createElement('li');
-      li.className = 'exercise-item';
-      const nm = document.createElement('span');
-      nm.textContent = ex.esercizio;
-      const icon = document.createElement('span');
-      icon.textContent = ex.done ? '✅' : '❌';
-      li.append(nm, icon);
-      ul.append(li);
+      const li = document.createElement('li'); li.className='exercise-item';
+      const nm = document.createElement('span'); nm.textContent=ex.esercizio;
+      const icon = document.createElement('span'); icon.textContent=ex.done?'✅':'❌';
+      li.append(nm, icon); ul.append(li);
     });
   }
 
-  // MOSTRA ESERCIZIO
   function showExercise() {
     const ex = exercises[currentExercise];
-  
-    document.getElementById('week-display').textContent =
-      `Settimana ${week}`;
-    document.getElementById('exercise-counter').textContent =
-      `Esercizio ${currentExercise + 1} di ${exercises.length}`;
-    document.getElementById('exercise-name').textContent =
-      ex.esercizio;
-  
-    // Caricamento immagine
+    document.getElementById('week-display').textContent      = `Settimana ${week}`;
+    document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise+1} di ${exercises.length}`;
+    document.getElementById('exercise-name').textContent    = ex.esercizio;
+
+    // immagine
     const img = document.getElementById('exercise-img');
-    const fileName = ex.esercizio.trim()
-      .replace(/\s+/g, '_') + '.jpg';
-    img.src = `images/${fileName}`;
-    img.onerror = () => { img.src = 'images/default.jpg'; };
-    // Mostra le note (o "ND" se vuoto)
-    const noteEl = document.getElementById('note-display');
-    noteEl.textContent = `Note: ${ex.note.trim() || 'ND'}`;
-    document.getElementById('prev-display').textContent =
-      `Precedente: ${ex.prevData}`;
-    document.getElementById('series-display').textContent =
-      `Serie ${currentSet} di ${ex.seriePreviste}`;
-    // Superset: mostra o nascondi
+    const fileName = ex.esercizio.trim().replace(/\s+/g,'_')+'.jpg';
+    img.src = `images/${fileName}`; img.onerror = ()=>{img.src='images/default.jpg';};
+
+    // note
+    document.getElementById('note-display').textContent = `Note: ${ex.note||'ND'}`;
+
+    // superset panel
     const sp = document.getElementById('superset-panel');
     if (ex.isSuperset) {
-    sp.style.display = 'block';
-    // pre-popola i campi se già inseriti
-    document.getElementById('sup-peso1').value = ex.lastPeso1 || '';
-    document.getElementById('sup-reps1').value = ex.lastReps1 || '';
-    document.getElementById('sup-peso2').value = ex.lastPeso2 || '';
-    document.getElementById('sup-reps2').value = ex.lastReps2 || '';
-      } else {
-      sp.style.display = 'none';
-      }
-    // Imposto il timer in millisecondi
-    currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
-  
-    // **AGGIORNO LA LISTA** con ✅/❌
+      sp.style.display='block';
+      document.getElementById('sup-peso1').value = ex.lastPeso1||'';
+      document.getElementById('sup-reps1').value = ex.lastReps1||'';
+      document.getElementById('sup-peso2').value = ex.lastPeso2||'';
+      document.getElementById('sup-reps2').value = ex.lastReps2||'';
+    } else sp.style.display='none';
+
+    document.getElementById('prev-display').textContent    = `Precedente: ${ex.prevData}`;
+    document.getElementById('series-display').textContent  = `Serie ${currentSet} di ${ex.seriePreviste}`;
+    currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
+
     renderList();
   }
 
-  // SALVA SET
   function submitSet() {
     const ex = exercises[currentExercise];
-    // se NON è superset, usa la logica normale
+    let params = '';
     if (!ex.isSuperset) {
-      const peso  = prompt("Peso (kg):");
-      const reps  = prompt("Ripetizioni:");
-      if (!peso || !reps) return alert("Compila i campi!");
-      const nuovo = confirm("Hai cambiato il peso?");
-      window.onSave = res => {
-        if (res.success) startTimer();
-        else alert("Errore salvataggio");
-      };
-      const s = document.createElement("script");
-      s.src = `${WEBAPP_URL}` +
-        `?callback=onSave` +
-        `&key=${encodeURIComponent(key)}` +
-        `&settimana=${week}` +
-        `&peso=${encodeURIComponent(peso)}` +
-        `&reps=${encodeURIComponent(reps)}` +
-        `&riga=${ex.riga}` +
-        `&nuovoPeso=${nuovo}`;
-      document.body.appendChild(s);
-      return;
+      const peso = document.getElementById('weight').value.trim();
+      const reps = document.getElementById('reps').value.trim();
+      if (!peso||!reps) return alert('Compila peso e ripetizioni');
+      params = `&peso=${peso}&reps=${reps}`;
+    } else {
+      const p1 = document.getElementById('sup-peso1').value.trim();
+      const r1 = document.getElementById('sup-reps1').value.trim();
+      const p2 = document.getElementById('sup-peso2').value.trim();
+      const r2 = document.getElementById('sup-reps2').value.trim();
+      if (!p1||!r1||!p2||!r2) return alert('Compila tutti i campi del superset');
+      ex.lastPeso1=p1; ex.lastReps1=r1; ex.lastPeso2=p2; ex.lastReps2=r2;
+      params = `&peso1=${p1}&reps1=${r1}&peso2=${p2}&reps2=${r2}`;
     }
-  
-    // SE è superset → chiedo DUE volte peso+reps
-    const peso1 = prompt("Peso esercizio 1 (kg):");
-    const reps1 = prompt("Ripetizioni esercizio 1:");
-    const peso2 = prompt("Peso esercizio 2 (kg):");
-    const reps2 = prompt("Ripetizioni esercizio 2:");
-    if (!peso1||!reps1||!peso2||!reps2) return alert("Compila tutti i campi!");
-  
-    const nuovo = confirm("Hai cambiato almeno uno dei pesi?");
+    const nuovo = confirm('Hai cambiato il peso?');
     window.onSave = res => {
-      if (res.success) startTimer();
-      else alert("Errore salvataggio superset");
+      if (res.success) startTimer(); else alert('Errore salvataggio');
     };
-    const s = document.createElement("script");
-    s.src = `${WEBAPP_URL}` +
-      `?callback=onSave` +
-      `&key=${encodeURIComponent(key)}` +
-      `&settimana=${week}` +
-      `&peso1=${encodeURIComponent(peso1)}` +
-      `&reps1=${encodeURIComponent(reps1)}` +
-      `&peso2=${encodeURIComponent(peso2)}` +
-      `&reps2=${encodeURIComponent(reps2)}` +
-      `&riga=${ex.riga}` +
-      `&nuovoPeso=${nuovo}`;
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}`+
+            `?callback=onSave`+
+            `&key=${encodeURIComponent(keyInput())}`+
+            `&settimana=${week}`+
+            `${params}`+
+            `&riga=${exercises[currentExercise].riga}`+
+            `&nuovoPeso=${nuovo}`;
     document.body.appendChild(s);
   }
 
-  // TIMER
   function startTimer() {
     clearInterval(timerInterval);
-    document.getElementById('timer').style.display = 'block';
-    const display = document.getElementById('countdown');
-    const start = Date.now();
-    timerInterval = setInterval(() => {
-      const rem = Math.max(currentRecTime - (Date.now() - start), 0);
-      const m = Math.floor(rem/60000);
-      const s = Math.floor(rem/1000) % 60;
-      const ms = rem % 1000;
-      display.textContent =
-        `${String(m).padStart(2,'0')}:` +
-        `${String(s).padStart(2,'0')}.` +
-        `${String(ms).padStart(3,'0')}`;
-      if (rem <= 0) {
-        clearInterval(timerInterval);
-        nextExercise();
-      }
-    }, 33);
+    document.getElementById('timer').style.display='block';
+    const d = document.getElementById('countdown'), st=Date.now();
+    timerInterval = setInterval(()=>{
+      const rem = Math.max(currentRecTime-(Date.now()-st),0);
+      const m=Math.floor(rem/60000), s=Math.floor(rem/1000)%60, ms=rem%1000;
+      d.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+      if (rem<=0){ clearInterval(timerInterval); nextExercise(); }
+    },33);
   }
 
-  // PROSSIMO
   function nextExercise() {
-    document.getElementById('timer').style.display = 'none';
-    if (currentSet < exercises[currentExercise].seriePreviste) {
-      currentSet++;
-    } else {
-      currentExercise++;
-      currentSet = 1;
-      if (currentExercise >= exercises.length) {
-        return alert('🏁 Fine allenamento');
-      }
-    }
+    document.getElementById('timer').style.display='none';
+    if (currentSet<exercises[currentExercise].seriePreviste) currentSet++;
+    else { currentExercise++; currentSet=1; if (currentExercise>=exercises.length) return alert('🏁 Fine allenamento'); }
     showExercise();
   }
 
-  // RESET TUTTO
   function resetAll() {
     if (!confirm('Annullare tutto l’allenamento?')) return;
-    currentExercise = 0;
-    currentSet = 1;
-    fetchExercises(
-      document.getElementById('key-input').value,
-      week, day
-    );
+    currentExercise=0; currentSet=1; fetchExercises();
   }
 
-  // SALTA ESERCIZIO
   function skipExercise() {
-    if (currentExercise < exercises.length - 1) {
-      currentExercise++;
-      currentSet = 1;
-      showExercise();
+    if (currentExercise<exercises.length-1) {
+      currentExercise++; currentSet=1; showExercise();
     } else alert('🏁 Fine allenamento');
   }
 
-  // TORNA INDIETRO & CANCELLA
   function goBackExercise() {
-    if (currentExercise === 0) {
-      return alert('Primo esercizio');
-    }
-    if (!confirm('Cancellare il precedente?')) {
-      return;
-    }
-  
-    const prev = exercises[currentExercise - 1];
+    if (currentExercise===0) return alert('Primo esercizio');
+    if (!confirm('Cancellare il precedente?')) return;
+    const prev = exercises[currentExercise-1];
     window.onClear = res => {
       if (res.success) {
-        // “Deseleziono” l’esercizio precedente
-        exercises[currentExercise - 1].done = false;
+        exercises[currentExercise-1].done=false;
         renderList();
-        // Torno indietro e resetto la serie
-        currentExercise--;
-        currentSet = 1;
-        showExercise();
-      } else {
-        alert('Errore nella cancellazione');
-      }
+        currentExercise--; currentSet=1; showExercise();
+      } else alert('Errore cancellazione');
     };
-  
-    const s = document.createElement('script');
-    s.src = `${WEBAPP_URL}` +
-      `?callback=onClear` +
-      `&key=${encodeURIComponent(document.getElementById('key-input').value)}` +
-      `&settimana=${week}` +
-      `&clear=true` +
-      `&riga=${prev.riga}`;
+    const s=document.createElement('script');
+    s.src=`${WEBAPP_URL}?callback=onClear&key=${encodeURIComponent(keyInput())}`+
+          `&settimana=${week}&clear=true&riga=${prev.riga}`;
     document.body.appendChild(s);
   }
 
-  // PARTENZA
   showView('init');
 });
