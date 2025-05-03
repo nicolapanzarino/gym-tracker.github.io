@@ -1,3 +1,5 @@
+// AA
+
 document.addEventListener('DOMContentLoaded', () => {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxVp_EvSdwaqsITX4OHVFERJ1ab7ic3jLeOoRYYbun0KZLFauTY5iu5mNgzoDhg2Hsc/exec';
   let exercises = [], week, day;
