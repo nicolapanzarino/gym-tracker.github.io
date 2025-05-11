@@ -129,35 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function submitSet() {
-    const ex = exercises[currentExercise];
-    let params = '';
-    if (!ex.isSuperset) {
-      const peso = document.getElementById('weight').value.trim();
-      const reps = document.getElementById('reps').value.trim();
-      if (!peso||!reps) return alert('Compila peso e ripetizioni');
-      params = `&peso=${peso}&reps=${reps}`;
-    } else {
-      const p1 = document.getElementById('sup-peso1').value.trim();
-      const r1 = document.getElementById('sup-reps1').value.trim();
-      const p2 = document.getElementById('sup-peso2').value.trim();
-      const r2 = document.getElementById('sup-reps2').value.trim();
-      if (!p1||!r1||!p2||!r2) return alert('Compila tutti i campi del superset');
-      ex.lastPeso1=p1; ex.lastReps1=r1; ex.lastPeso2=p2; ex.lastReps2=r2;
-      params = `&peso1=${p1}&reps1=${r1}&peso2=${p2}&reps2=${r2}`;
-    }
-    const nuovo = confirm('Hai cambiato il peso?');
+    const peso = document.getElementById('weight').value.trim();
+    const reps = document.getElementById('reps').value.trim();
+    if (!peso || !reps) return alert('Compila peso e ripetizioni');
+  
     window.onSave = res => {
-      if (res.success) startTimer(); else alert('Errore salvataggio');
+      if (res.success) startTimer();
+      else alert('Errore nel salvataggio');
     };
-    const s = document.createElement('script');
-    s.src = `${WEBAPP_URL}`+
-            `?callback=onSave`+
-            `&key=${encodeURIComponent(keyInput())}`+
-            `&settimana=${week}`+
-            `${params}`+
-            `&riga=${exercises[currentExercise].riga}`+
-            `&nuovoPeso=${nuovo}`;
-    document.body.appendChild(s);
+  
+    const script = document.createElement('script');
+    script.src = `${WEBAPP_URL}`
+      + `?callback=onSave`
+      + `&key=${encodeURIComponent(keyInput())}`
+      + `&settimana=${week}`
+      + `&peso=${encodeURIComponent(peso)}`
+      + `&reps=${encodeURIComponent(reps)}`
+      + `&riga=${exercises[currentExercise].riga}`;
+    document.body.appendChild(script);
   }
 
   function startTimer() {
