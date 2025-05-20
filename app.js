@@ -122,7 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('sup-reps2').value = ex.lastReps2||'';
     } else sp.style.display='none';
 
-    document.getElementById('prev-display').textContent    = `Precedente: ${ex.prevData}`;
+    const prev = ex.prevData || '';
+    const rac = ex.pesoRaccomandato ? `Peso raccomandato: ${ex.pesoRaccomandato}` : '';
+    document.getElementById('prev-display').innerHTML = [prev, rac].filter(Boolean).join('<br>');
+
     document.getElementById('series-display').textContent  = `Serie ${currentSet} di ${ex.seriePreviste}`;
     currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
 
