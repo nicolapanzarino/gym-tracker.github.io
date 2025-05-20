@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showExercise() {
     const ex = exercises[currentExercise];
+    console.log('[showExercise] Dati esercizio:', ex);
     document.getElementById('week-display').textContent      = `Settimana ${week}`;
     document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise+1} di ${exercises.length}`;
     document.getElementById('exercise-name').textContent    = ex.esercizio;
