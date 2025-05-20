@@ -128,26 +128,50 @@ document.addEventListener('DOMContentLoaded', () => {
     renderList();
   }
 
-  function submitSet() {
-    const peso = document.getElementById('weight').value.trim();
-    const reps = document.getElementById('reps').value.trim();
-    if (!peso || !reps) return alert('Compila peso e ripetizioni');
-  
-    window.onSave = res => {
-      if (res.success) startTimer();
-      else alert('Errore nel salvataggio');
-    };
-  
-    const script = document.createElement('script');
-    script.src = `${WEBAPP_URL}`
-      + `?callback=onSave`
-      + `&key=${encodeURIComponent(keyInput())}`
-      + `&settimana=${week}`
-      + `&peso=${encodeURIComponent(peso)}`
-      + `&reps=${encodeURIComponent(reps)}`
-      + `&riga=${exercises[currentExercise].riga}`;
-    document.body.appendChild(script);
+function submitSet() {
+  console.log('[submitSet] Inizio funzione');
+
+  const peso = document.getElementById('weight').value.trim();
+  const reps = document.getElementById('reps').value.trim();
+  console.log('[submitSet] Valori inseriti → peso:', peso, ', reps:', reps);
+
+  if (!peso || !reps) {
+    alert('Compila peso e ripetizioni');
+    console.log('[submitSet] Terminato: peso o reps mancanti');
+    return;
   }
+
+  const esercizioCorrente = exercises[currentExercise];
+  if (!esercizioCorrente || !esercizioCorrente.riga) {
+    alert('Errore interno: dati esercizio mancanti');
+    console.error('[submitSet] Terminato: esercizio o riga non definito');
+    return;
+  }
+
+  window.onSave = res => {
+    console.log('[submitSet] Callback onSave ricevuta:', res);
+    if (res.success) {
+      startTimer();
+    } else {
+      alert('Errore nel salvataggio');
+    }
+    console.log('[submitSet] Fine callback onSave');
+  };
+
+  const script = document.createElement('script');
+  script.src = `${WEBAPP_URL}`
+    + `?callback=onSave`
+    + `&key=${encodeURIComponent(keyInput())}`
+    + `&settimana=${week}`
+    + `&peso=${encodeURIComponent(peso)}`
+    + `&reps=${encodeURIComponent(reps)}`
+    + `&riga=${esercizioCorrente.riga}`;
+  
+  document.body.appendChild(script);
+  console.log('[submitSet] Script JSONP aggiunto al DOM:', script.src);
+  console.log('[submitSet] Fine funzione');
+}
+
 
   function startTimer() {
     clearInterval(timerInterval);
