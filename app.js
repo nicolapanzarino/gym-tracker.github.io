@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = keyInput();
     if (!key) return alert('Inserisci chiave');
     window.onAuth = res => {
-      if (res.error==='Unauthorized') showView('deny');
+      if (res.error === 'Unauthorized') showView('deny');
       else showView('select');
     };
     const s = document.createElement('script');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ——— SELEZIONE SETTIMANA/GIORNO ———
   document.getElementById('start-btn').addEventListener('click', () => {
-    week = parseInt(document.getElementById('week-input').value,10);
+    week = parseInt(document.getElementById('week-input').value, 10);
     day  = document.getElementById('day-input').value;
     if (!week || !day) return alert('Inserisci settimana e giorno');
     fetchExercises();
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function fetchExercises() {
     showView('load');
     window.onExercises = data => {
-      if (data.error==='Unauthorized') return showView('deny');
+      if (data.error === 'Unauthorized') return showView('deny');
       exercises = data;
       renderList();
       showView('app');
@@ -63,14 +63,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ——— FETCH SILENZIOSA IN BACKGROUND ———
   function silentFetchExercises() {
-    window.onExercises = data => {
-      if (data.error==='Unauthorized') return;
+    window.onSilentExercises = data => {
+      if (data.error === 'Unauthorized') return;
       exercises = data;
       renderList();
     };
     const scr = document.createElement('script');
     scr.src = `${WEBAPP_URL}`
-      + `?callback=onExercises`
+      + `?callback=onSilentExercises`
       + `&key=${encodeURIComponent(keyInput())}`
       + `&settimana=${week}`
       + `&giorno=${encodeURIComponent(day)}`;
@@ -173,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ——— CANCELLA PRECEDENTE ———
   document.getElementById('prev-btn').addEventListener('click', () => {
     if (currentExercise === 0) return alert('Primo esercizio');
     if (!confirm('Cancellare il precedente?')) return;
@@ -206,8 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('[submitSet] Terminato: peso o reps mancanti');
       return;
     }
-    const esercizioCorrente = exercises[currentExercise];
-    if (!esercizioCorrente || !esercizioCorrente.riga) {
+    const exCurr = exercises[currentExercise];
+    if (!exCurr || !exCurr.riga) {
       alert('Errore interno: dati esercizio mancanti');
       console.error('[submitSet] Terminato: esercizio o riga non definito');
       return;
@@ -225,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `settimana=${week}`,
       `peso=${encodeURIComponent(peso)}`,
       `reps=${encodeURIComponent(reps)}`,
-      `riga=${esercizioCorrente.riga}`,
+      `riga=${exCurr.riga}`,
       isFirst ? `firstSet=1` : null
     ].filter(Boolean).join('&');
     const script = document.createElement('script');
@@ -238,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ——— TIMER ———
   function startTimer() {
     clearInterval(timerInterval);
-    document.getElementById('timer').style.display='block';
+    document.getElementById('timer').style.display = 'block';
     const d = document.getElementById('countdown');
     const st = Date.now();
     timerInterval = setInterval(() => {
@@ -254,8 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 33);
   }
 
+  // ——— PASSA AL PROSSIMO ESERCIZIO/SET ———
   function nextExercise() {
-    document.getElementById('timer').style.display='none';
+    document.getElementById('timer').style.display = 'none';
     if (currentSet < exercises[currentExercise].seriePreviste) {
       currentSet++;
     } else {
