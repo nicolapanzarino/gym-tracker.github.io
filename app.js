@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxVp_EvSdwaqsITX4OHVFERJ1ab7ic3jLeOoRYYbun0KZLFauTY5iu5mNgzoDhg2Hsc/exec';
   let exercises = [], week, day;
   let currentExercise = 0, currentSet = 1, currentRecTime = 0, timerInterval;
+  let waitingForSave = false;
   const keyInput = () => document.getElementById('key-input').value.trim();
 
   const initCard   = document.getElementById('init-card');
@@ -173,11 +174,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const reps = document.getElementById('reps').value.trim();
     if (!peso || !reps) return alert('Compila peso e ripetizioni');
 
+    if (waitingForSave) {
+      alert('Attendere il salvataggio precedente...');
+      return;
+    }
+    waitingForSave = true;
+
     const exCurr = exercises[currentExercise];
     if (!exCurr || !exCurr.riga) return alert('Errore interno');
 
     const isFirst = currentSet===1;
     window.onSave = r => {
+      waitingForSave = false;
       if (r.success) {
         advanceExercise();
         showExercise();
@@ -207,15 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const rem=Math.max(currentRecTime-(Date.now()-start),0);
       const m=Math.floor(rem/60000), s=Math.floor(rem/1000)%60, ms=rem%1000;
       d.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
-      if (rem<=0) { clearInterval(timerInterval); nextExercise(); }
+      if (rem<=0) {
+        clearInterval(timerInterval);
+        document.getElementById('timer').style.display='none';
+      }
     },33);
-  }
-
-  function nextExercise() {
-    document.getElementById('timer').style.display='none';
-    advanceExercise();
-    if (currentExercise>=exercises.length) return alert('🏁 Fine allenamento');
-    showExercise(); deferFetch();
   }
 
   document.getElementById('reset-btn').addEventListener('click', () => {
