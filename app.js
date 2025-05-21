@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     listCard.style.display   = view==='list'?'block':'none';
   }
 
-  // LOGIN
+  // ——— LOGIN ———
   document.getElementById('login-btn').addEventListener('click', () => {
     const key = keyInput();
     if (!key) return alert('Inserisci chiave');
@@ -34,35 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('retry-btn').addEventListener('click', () => location.reload());
 
-  // SELEZIONE SETTIMANA/GIORNO
+  // ——— SELEZIONE SETTIMANA/GIORNO ———
   document.getElementById('start-btn').addEventListener('click', () => {
     week = parseInt(document.getElementById('week-input').value,10);
     day  = document.getElementById('day-input').value;
-    if (!week||!day) return alert('Inserisci settimana e giorno');
+    if (!week || !day) return alert('Inserisci settimana e giorno');
     fetchExercises();
   });
 
-  // NAVIGAZIONE
-  document.getElementById('list-btn').addEventListener('click', () => showView('list'));
-  document.getElementById('back-app-btn').addEventListener('click', () => showView('app'));
-
-  // Silenziosa: aggiorna solo dati + lista, senza cambiare vista
-  function silentFetchExercises() {
-    window.onExercises = data => {
-      if (data.error==='Unauthorized') return;
-      exercises = data;
-      renderList();
-    };
-    const scr = document.createElement('script');
-    scr.src = `${WEBAPP_URL}`
-      + `?callback=onExercises`
-      + `&key=${encodeURIComponent(keyInput())}`
-      + `&settimana=${week}`
-      + `&giorno=${encodeURIComponent(day)}`;
-    document.body.appendChild(scr);
-  }
-
-  // Fetch completa (mostra loading → app)
+  // ——— FETCH INIZIALE CON LOADING ———
   function fetchExercises() {
     showView('load');
     window.onExercises = data => {
@@ -81,7 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(scr);
   }
 
-  // Lista laterale
+  // ——— FETCH SILENZIOSA IN BACKGROUND ———
+  function silentFetchExercises() {
+    window.onExercises = data => {
+      if (data.error==='Unauthorized') return;
+      exercises = data;
+      renderList();
+    };
+    const scr = document.createElement('script');
+    scr.src = `${WEBAPP_URL}`
+      + `?callback=onExercises`
+      + `&key=${encodeURIComponent(keyInput())}`
+      + `&settimana=${week}`
+      + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(scr);
+  }
+
+  // ——— RENDER LISTA LATERALE ———
   function renderList() {
     const ul = document.getElementById('exercise-list');
     ul.innerHTML = '';
@@ -97,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Mostra esercizio/serie
+  // ——— VISUALIZZA ESERCIZIO/SET ———
   function showExercise() {
     const ex = exercises[currentExercise];
 
@@ -134,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderList();
   }
 
-  // NAVIGATORI con fetch silenziosa
+  // ——— NAVIGAZIONE (serie/esercizi) ———
   document.getElementById('next-set-btn').addEventListener('click', () => {
     if (currentSet < exercises[currentExercise].seriePreviste) {
       currentSet++;
@@ -199,15 +195,89 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(s);
   });
 
+  // ——— SALVA SET ———
   document.getElementById('save-btn').addEventListener('click', submitSet);
+  function submitSet() {
+    console.log('[submitSet] Inizio funzione');
+    const peso = document.getElementById('weight').value.trim();
+    const reps = document.getElementById('reps').value.trim();
+    if (!peso || !reps) {
+      alert('Compila peso e ripetizioni');
+      console.log('[submitSet] Terminato: peso o reps mancanti');
+      return;
+    }
+    const esercizioCorrente = exercises[currentExercise];
+    if (!esercizioCorrente || !esercizioCorrente.riga) {
+      alert('Errore interno: dati esercizio mancanti');
+      console.error('[submitSet] Terminato: esercizio o riga non definito');
+      return;
+    }
+    const isFirst = currentSet === 1;
+    window.onSave = res => {
+      console.log('[submitSet] Callback onSave ricevuta:', res);
+      if (res.success) startTimer();
+      else alert('Errore nel salvataggio');
+      console.log('[submitSet] Fine callback onSave');
+    };
+    const params = [
+      `callback=onSave`,
+      `key=${encodeURIComponent(keyInput())}`,
+      `settimana=${week}`,
+      `peso=${encodeURIComponent(peso)}`,
+      `reps=${encodeURIComponent(reps)}`,
+      `riga=${esercizioCorrente.riga}`,
+      isFirst ? `firstSet=1` : null
+    ].filter(Boolean).join('&');
+    const script = document.createElement('script');
+    script.src = `${WEBAPP_URL}?${params}`;
+    document.body.appendChild(script);
+    console.log('[submitSet] Script JSONP aggiunto al DOM:', script.src);
+    console.log('[submitSet] Fine funzione');
+  }
+
+  // ——— TIMER ———
+  function startTimer() {
+    clearInterval(timerInterval);
+    document.getElementById('timer').style.display='block';
+    const d = document.getElementById('countdown');
+    const st = Date.now();
+    timerInterval = setInterval(() => {
+      const rem = Math.max(currentRecTime - (Date.now() - st), 0);
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor(rem / 1000) % 60;
+      const ms = rem % 1000;
+      d.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+      if (rem <= 0) {
+        clearInterval(timerInterval);
+        nextExercise();
+      }
+    }, 33);
+  }
+
+  function nextExercise() {
+    document.getElementById('timer').style.display='none';
+    if (currentSet < exercises[currentExercise].seriePreviste) {
+      currentSet++;
+    } else {
+      currentExercise++;
+      currentSet = 1;
+      if (currentExercise >= exercises.length) {
+        return alert('🏁 Fine allenamento');
+      }
+    }
+    showExercise();
+    silentFetchExercises();
+  }
+
+  // ——— RESET ———
   document.getElementById('reset-btn').addEventListener('click', resetAll);
+  function resetAll() {
+    if (!confirm('Annullare tutto l’allenamento?')) return;
+    currentExercise = 0;
+    currentSet = 1;
+    fetchExercises();
+  }
 
-  // Funzione submitSet e startTimer restano invariate…
-
-  function submitSet() { /* … */ }
-  function startTimer() { /* … */ }
-  function resetAll() { /* … */ }
-  function goBackExercise() { /* … */ }
-
+  // ——— AVVIO ———
   showView('init');
 });
