@@ -1,3 +1,4 @@
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxVp_EvSdwaqsITX4OHVFERJ1ab7ic3jLeOoRYYbun0KZLFauTY5iu5mNgzoDhg2Hsc/exec';
   let exercises = [], week, day;
@@ -11,113 +12,104 @@ document.addEventListener('DOMContentLoaded', () => {
   const appCard    = document.getElementById('app-card');
   const listCard   = document.getElementById('list-card');
 
-  function showView(view) {
-    initCard.style.display   = view==='init'?   'block':'none';
-    selectCard.style.display = view==='select'?'block':'none';
-    loading.style.display    = view==='load'?   'block':'none';
-    denyCard.style.display   = view==='deny'?   'block':'none';
-    appCard.style.display    = view==='app'?    'block':'none';
-    listCard.style.display   = view==='list'?'block':'none';
-  }
+  const showView = v => {
+    initCard .style.display = v==='init' ? 'block':'none';
+    selectCard.style.display = v==='select'?'block':'none';
+    loading   .style.display = v==='load' ? 'block':'none';
+    denyCard  .style.display = v==='deny' ? 'block':'none';
+    appCard   .style.display = v==='app'  ? 'block':'none';
+    listCard  .style.display = v==='list' ? 'block':'none';
+  };
 
-  // ——— LOGIN ———
+  /* ========== LOGIN ========== */
   document.getElementById('login-btn').addEventListener('click', () => {
     const key = keyInput();
     if (!key) return alert('Inserisci chiave');
-    window.onAuth = res => {
-      if (res.error === 'Unauthorized') showView('deny');
-      else showView('select');
-    };
+    window.onAuth = r => r.error==='Unauthorized' ? showView('deny') : showView('select');
     const s = document.createElement('script');
     s.src = `${WEBAPP_URL}?callback=onAuth&key=${encodeURIComponent(key)}`;
     document.body.appendChild(s);
   });
   document.getElementById('retry-btn').addEventListener('click', () => location.reload());
 
-  // ——— SELEZIONE SETTIMANA/GIORNO ———
+  /* ========== SELEZIONE SETTIMANA/GIORNO ========== */
   document.getElementById('start-btn').addEventListener('click', () => {
-    week = parseInt(document.getElementById('week-input').value, 10);
+    week = parseInt(document.getElementById('week-input').value,10);
     day  = document.getElementById('day-input').value;
     if (!week || !day) return alert('Inserisci settimana e giorno');
     fetchExercises();
   });
 
-  // ——— FETCH INIZIALE CON LOADING ———
+  /* ========== FETCH INIZIALE (con loading) ========== */
   function fetchExercises() {
     showView('load');
     window.onExercises = data => {
-      if (data.error === 'Unauthorized') return showView('deny');
+      if (data.error==='Unauthorized') return showView('deny');
       exercises = data;
       renderList();
       showView('app');
       showExercise();
     };
-    const scr = document.createElement('script');
-    scr.src = `${WEBAPP_URL}`
-      + `?callback=onExercises`
-      + `&key=${encodeURIComponent(keyInput())}`
-      + `&settimana=${week}`
-      + `&giorno=${encodeURIComponent(day)}`;
-    document.body.appendChild(scr);
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onExercises`
+          + `&key=${encodeURIComponent(keyInput())}`
+          + `&settimana=${week}`
+          + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(s);
   }
 
-  // ——— FETCH SILENZIOSA IN BACKGROUND ———
+  /* ========== FETCH SILENZIOSA ========== */
   function silentFetchExercises() {
-    window.onSilentExercises = data => {
-      if (data.error === 'Unauthorized') return;
-      exercises = data;
+    window.onSilentExercises = d => {
+      if (d.error==='Unauthorized') return;
+      exercises = d;
       renderList();
     };
-    const scr = document.createElement('script');
-    scr.src = `${WEBAPP_URL}`
-      + `?callback=onSilentExercises`
-      + `&key=${encodeURIComponent(keyInput())}`
-      + `&settimana=${week}`
-      + `&giorno=${encodeURIComponent(day)}`;
-    document.body.appendChild(scr);
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onSilentExercises`
+          + `&key=${encodeURIComponent(keyInput())}`
+          + `&settimana=${week}`
+          + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(s);
   }
 
-  // ——— RENDER LISTA LATERALE ———
+  /* Lancia la fetch nel frame successivo */
+  const deferFetch = () => requestAnimationFrame(silentFetchExercises);
+
+  /* ========== LISTA LATERALE ========== */
   function renderList() {
     const ul = document.getElementById('exercise-list');
     ul.innerHTML = '';
     exercises.forEach(ex => {
       const li = document.createElement('li');
       li.className = 'exercise-item';
-      const nm = document.createElement('span');
-      nm.textContent = ex.esercizio;
-      const icon = document.createElement('span');
-      icon.textContent = ex.done ? '✅' : '❌';
-      li.append(nm, icon);
-      ul.append(li);
+      li.innerHTML = `<span>${ex.esercizio}</span><span>${ex.done?'✅':'❌'}</span>`;
+      ul.appendChild(li);
     });
   }
 
-  // ——— VISUALIZZA ESERCIZIO/SET ———
+  /* ========== MOSTRA ESERCIZIO/SERIE ========== */
   function showExercise() {
     const ex = exercises[currentExercise];
 
     document.getElementById('week-display').textContent      = `Settimana ${week}`;
-    document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise + 1} di ${exercises.length}`;
+    document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise+1} di ${exercises.length}`;
     document.getElementById('exercise-name').textContent    = ex.esercizio;
 
     const img = document.getElementById('exercise-img');
-    const fileName = ex.esercizio.trim().replace(/\s+/g,'_') + '.jpg';
-    img.src = `images/${fileName}`;
-    img.onerror = () => img.src = 'images/default.jpg';
+    img.src = `images/${ex.esercizio.trim().replace(/\s+/g,'_')}.jpg`;
+    img.onerror = () => img.src='images/default.jpg';
 
-    document.getElementById('note-display').textContent = `Note: ${ex.note || 'ND'}`;
+    document.getElementById('note-display').textContent = `Note: ${ex.note||'ND'}`;
 
     const sp = document.getElementById('superset-panel');
     if (ex.isSuperset) {
-      sp.style.display = 'block';
-      document.getElementById('sup-peso1').value = ex.lastPeso1 || '';
-      document.getElementById('sup-reps1').value = ex.lastReps1 || '';
-      document.getElementById('sup-peso2').value = ex.lastPeso2 || '';
-      document.getElementById('sup-reps2').value = ex.lastReps2 || '';
-    } else {
-      sp.style.display = 'none';
-    }
+      sp.style.display='block';
+      ['1','2'].forEach(n=>{
+        document.getElementById(`sup-peso${n}`).value = ex[`lastPeso${n}`] || '';
+        document.getElementById(`sup-reps${n}`).value = ex[`lastReps${n}`] || '';
+      });
+    } else sp.style.display='none';
 
     const parts = [];
     if (ex.pesoPrecedente)   parts.push(`Peso precedente: ${ex.pesoPrecedente}`);
@@ -125,100 +117,75 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('prev-display').innerHTML = parts.join('<br>');
 
     document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
-    currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
+    currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
 
     renderList();
   }
 
-  // ——— NAVIGAZIONE (serie/esercizi) ———
-  document.getElementById('next-set-btn').addEventListener('click', () => {
+  /* ========== NAVIGAZIONE ========== */
+  const nextSetBtn = document.getElementById('next-set-btn');
+  const prevSetBtn = document.getElementById('prev-set-btn');
+  const skipBtn    = document.getElementById('skip-btn');
+  const skipBackBtn= document.getElementById('skip-back-btn');
+  const prevBtn    = document.getElementById('prev-btn');
+
+  nextSetBtn.addEventListener('click', () => {
     if (currentSet < exercises[currentExercise].seriePreviste) {
-      currentSet++;
-      showExercise();
-      silentFetchExercises();
-    } else {
-      alert('Sei già all\'ultima serie');
-    }
+      currentSet++; showExercise(); deferFetch();
+    } else alert('Sei già all\'ultima serie');
   });
 
-  document.getElementById('prev-set-btn').addEventListener('click', () => {
+  prevSetBtn.addEventListener('click', () => {
     if (currentSet > 1) {
-      currentSet--;
-      showExercise();
-      silentFetchExercises();
-    } else {
-      alert('Sei già alla prima serie');
-    }
+      currentSet--; showExercise(); deferFetch();
+    } else alert('Sei già alla prima serie');
   });
 
-  document.getElementById('skip-btn').addEventListener('click', () => {
-    if (currentExercise < exercises.length - 1) {
-      currentExercise++;
-      currentSet = 1;
-      showExercise();
-      silentFetchExercises();
-    } else {
-      alert('🏁 Fine allenamento');
-    }
+  skipBtn.addEventListener('click', () => {
+    if (currentExercise < exercises.length-1) {
+      currentExercise++; currentSet=1;
+      showExercise(); deferFetch();
+    } else alert('🏁 Fine allenamento');
   });
 
-  document.getElementById('skip-back-btn').addEventListener('click', () => {
+  skipBackBtn.addEventListener('click', () => {
     if (currentExercise > 0) {
-      currentExercise--;
-      currentSet = 1;
-      showExercise();
-      silentFetchExercises();
-    } else {
-      alert('Sei già al primo esercizio');
-    }
+      currentExercise--; currentSet=1;
+      showExercise(); deferFetch();
+    } else alert('Sei già al primo esercizio');
   });
 
-  // ——— CANCELLA PRECEDENTE ———
-  document.getElementById('prev-btn').addEventListener('click', () => {
-    if (currentExercise === 0) return alert('Primo esercizio');
+  prevBtn.addEventListener('click', () => {
+    if (currentExercise===0) return alert('Primo esercizio');
     if (!confirm('Cancellare il precedente?')) return;
-    const prev = exercises[currentExercise - 1];
-    window.onClear = res => {
-      if (res.success) {
-        exercises[currentExercise - 1].done = false;
-        currentExercise--;
-        currentSet = 1;
-        showExercise();
-        silentFetchExercises();
-      } else {
-        alert('Errore cancellazione');
-      }
+    const prev = exercises[currentExercise-1];
+    window.onClear = r => {
+      if (r.success) {
+        exercises[currentExercise-1].done=false;
+        currentExercise--; currentSet=1;
+        showExercise(); deferFetch();
+      } else alert('Errore cancellazione');
     };
-    const s = document.createElement('script');
+    const s=document.createElement('script');
     s.src = `${WEBAPP_URL}?callback=onClear`
-      + `&key=${encodeURIComponent(keyInput())}`
-      + `&settimana=${week}&clear=true&riga=${prev.riga}`;
+        + `&key=${encodeURIComponent(keyInput())}`
+        + `&settimana=${week}&clear=true&riga=${prev.riga}`;
     document.body.appendChild(s);
   });
 
-  // ——— SALVA SET ———
+  /* ========== SALVA SET ========== */
   document.getElementById('save-btn').addEventListener('click', submitSet);
   function submitSet() {
-    console.log('[submitSet] Inizio funzione');
     const peso = document.getElementById('weight').value.trim();
     const reps = document.getElementById('reps').value.trim();
-    if (!peso || !reps) {
-      alert('Compila peso e ripetizioni');
-      console.log('[submitSet] Terminato: peso o reps mancanti');
-      return;
-    }
+    if (!peso || !reps) return alert('Compila peso e ripetizioni');
+
     const exCurr = exercises[currentExercise];
-    if (!exCurr || !exCurr.riga) {
-      alert('Errore interno: dati esercizio mancanti');
-      console.error('[submitSet] Terminato: esercizio o riga non definito');
-      return;
-    }
-    const isFirst = currentSet === 1;
-    window.onSave = res => {
-      console.log('[submitSet] Callback onSave ricevuta:', res);
-      if (res.success) startTimer();
-      else alert('Errore nel salvataggio');
-      console.log('[submitSet] Fine callback onSave');
+    if (!exCurr || !exCurr.riga) return alert('Errore interno');
+
+    const isFirst = currentSet===1;
+    window.onSave = r => {
+      if (r.success) startTimer(); else alert('Errore salvataggio');
     };
     const params = [
       `callback=onSave`,
@@ -227,59 +194,48 @@ document.addEventListener('DOMContentLoaded', () => {
       `peso=${encodeURIComponent(peso)}`,
       `reps=${encodeURIComponent(reps)}`,
       `riga=${exCurr.riga}`,
-      isFirst ? `firstSet=1` : null
+      isFirst ? 'firstSet=1' : null
     ].filter(Boolean).join('&');
-    const script = document.createElement('script');
-    script.src = `${WEBAPP_URL}?${params}`;
-    document.body.appendChild(script);
-    console.log('[submitSet] Script JSONP aggiunto al DOM:', script.src);
-    console.log('[submitSet] Fine funzione');
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?${params}`;
+    document.body.appendChild(s);
   }
 
-  // ——— TIMER ———
+  /* ========== TIMER & AVANZAMENTO AUTO ========== */
   function startTimer() {
     clearInterval(timerInterval);
-    document.getElementById('timer').style.display = 'block';
-    const d = document.getElementById('countdown');
-    const st = Date.now();
-    timerInterval = setInterval(() => {
-      const rem = Math.max(currentRecTime - (Date.now() - st), 0);
-      const m = Math.floor(rem / 60000);
-      const s = Math.floor(rem / 1000) % 60;
-      const ms = rem % 1000;
+    document.getElementById('timer').style.display='block';
+    const d=document.getElementById('countdown'), start=Date.now();
+    timerInterval=setInterval(()=>{
+      const rem=Math.max(currentRecTime-(Date.now()-start),0);
+      const m=Math.floor(rem/60000), s=Math.floor(rem/1000)%60, ms=rem%1000;
       d.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
-      if (rem <= 0) {
-        clearInterval(timerInterval);
-        nextExercise();
-      }
-    }, 33);
+      if (rem<=0) { clearInterval(timerInterval); nextExercise(); }
+    },33);
   }
 
-  // ——— PASSA AL PROSSIMO ESERCIZIO/SET ———
   function nextExercise() {
-    document.getElementById('timer').style.display = 'none';
-    if (currentSet < exercises[currentExercise].seriePreviste) {
+    document.getElementById('timer').style.display='none';
+    if (currentSet<exercises[currentExercise].seriePreviste) {
       currentSet++;
     } else {
-      currentExercise++;
-      currentSet = 1;
-      if (currentExercise >= exercises.length) {
-        return alert('🏁 Fine allenamento');
-      }
+      currentExercise++; currentSet=1;
+      if (currentExercise>=exercises.length) return alert('🏁 Fine allenamento');
     }
-    showExercise();
-    silentFetchExercises();
+    showExercise(); deferFetch();
   }
 
-  // ——— RESET ———
-  document.getElementById('reset-btn').addEventListener('click', resetAll);
-  function resetAll() {
+  /* ========== RESET ========== */
+  document.getElementById('reset-btn').addEventListener('click', () => {
     if (!confirm('Annullare tutto l’allenamento?')) return;
-    currentExercise = 0;
-    currentSet = 1;
-    fetchExercises();
-  }
+    currentExercise=0; currentSet=1; fetchExercises();
+  });
 
-  // ——— AVVIO ———
+  /* ========== NAVIGAZIONE VISTE ========== */
+  document.getElementById('list-btn').addEventListener('click', () => showView('list'));
+  document.getElementById('back-app-btn').addEventListener('click', () => showView('app'));
+
+  /* ========== AVVIO ========== */
   showView('init');
 });
+</script>
