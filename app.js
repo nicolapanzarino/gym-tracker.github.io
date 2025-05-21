@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     listCard  .style.display = v==='list' ? 'block':'none';
   };
 
-  /* ========== LOGIN ========== */
   document.getElementById('login-btn').addEventListener('click', () => {
     const key = keyInput();
     if (!key) return alert('Inserisci chiave');
@@ -31,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('retry-btn').addEventListener('click', () => location.reload());
 
-  /* ========== SELEZIONE SETTIMANA/GIORNO ========== */
   document.getElementById('start-btn').addEventListener('click', () => {
     week = parseInt(document.getElementById('week-input').value,10);
     day  = document.getElementById('day-input').value;
@@ -39,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchExercises();
   });
 
-  /* ========== FETCH INIZIALE (con loading) ========== */
   function fetchExercises() {
     showView('load');
     window.onExercises = data => {
@@ -57,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(s);
   }
 
-  /* ========== FETCH SILENZIOSA ========== */
   function silentFetchExercises() {
     window.onSilentExercises = d => {
       if (d.error==='Unauthorized') return;
@@ -72,10 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(s);
   }
 
-  /* Lancia la fetch nel frame successivo */
   const deferFetch = () => requestAnimationFrame(silentFetchExercises);
 
-  /* ========== LISTA LATERALE ========== */
   function renderList() {
     const ul = document.getElementById('exercise-list');
     ul.innerHTML = '';
@@ -87,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ========== MOSTRA ESERCIZIO/SERIE ========== */
   function showExercise() {
     const ex = exercises[currentExercise];
 
@@ -121,40 +114,42 @@ document.addEventListener('DOMContentLoaded', () => {
     renderList();
   }
 
-  /* ========== NAVIGAZIONE ========== */
-  const nextSetBtn = document.getElementById('next-set-btn');
-  const prevSetBtn = document.getElementById('prev-set-btn');
-  const skipBtn    = document.getElementById('skip-btn');
-  const skipBackBtn= document.getElementById('skip-back-btn');
-  const prevBtn    = document.getElementById('prev-btn');
+  function advanceExercise() {
+    if (currentSet < exercises[currentExercise].seriePreviste) {
+      currentSet++;
+    } else {
+      currentExercise++;
+      currentSet = 1;
+    }
+  }
 
-  nextSetBtn.addEventListener('click', () => {
+  document.getElementById('next-set-btn').addEventListener('click', () => {
     if (currentSet < exercises[currentExercise].seriePreviste) {
       currentSet++; showExercise(); deferFetch();
     } else alert('Sei già all\'ultima serie');
   });
 
-  prevSetBtn.addEventListener('click', () => {
+  document.getElementById('prev-set-btn').addEventListener('click', () => {
     if (currentSet > 1) {
       currentSet--; showExercise(); deferFetch();
     } else alert('Sei già alla prima serie');
   });
 
-  skipBtn.addEventListener('click', () => {
+  document.getElementById('skip-btn').addEventListener('click', () => {
     if (currentExercise < exercises.length-1) {
       currentExercise++; currentSet=1;
       showExercise(); deferFetch();
     } else alert('🏁 Fine allenamento');
   });
 
-  skipBackBtn.addEventListener('click', () => {
+  document.getElementById('skip-back-btn').addEventListener('click', () => {
     if (currentExercise > 0) {
       currentExercise--; currentSet=1;
       showExercise(); deferFetch();
     } else alert('Sei già al primo esercizio');
   });
 
-  prevBtn.addEventListener('click', () => {
+  document.getElementById('prev-btn').addEventListener('click', () => {
     if (currentExercise===0) return alert('Primo esercizio');
     if (!confirm('Cancellare il precedente?')) return;
     const prev = exercises[currentExercise-1];
@@ -172,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(s);
   });
 
-  /* ========== SALVA SET ========== */
   document.getElementById('save-btn').addEventListener('click', submitSet);
   function submitSet() {
     const peso = document.getElementById('weight').value.trim();
@@ -184,7 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isFirst = currentSet===1;
     window.onSave = r => {
-      if (r.success) startTimer(); else alert('Errore salvataggio');
+      if (r.success) {
+        advanceExercise();
+        showExercise();
+        deferFetch();
+        startTimer();
+      } else alert('Errore salvataggio');
     };
     const params = [
       `callback=onSave`,
@@ -200,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(s);
   }
 
-  /* ========== TIMER & AVANZAMENTO AUTO ========== */
   function startTimer() {
     clearInterval(timerInterval);
     document.getElementById('timer').style.display='block';
@@ -215,25 +213,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function nextExercise() {
     document.getElementById('timer').style.display='none';
-    if (currentSet<exercises[currentExercise].seriePreviste) {
-      currentSet++;
-    } else {
-      currentExercise++; currentSet=1;
-      if (currentExercise>=exercises.length) return alert('🏁 Fine allenamento');
-    }
+    advanceExercise();
+    if (currentExercise>=exercises.length) return alert('🏁 Fine allenamento');
     showExercise(); deferFetch();
   }
 
-  /* ========== RESET ========== */
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (!confirm('Annullare tutto l’allenamento?')) return;
     currentExercise=0; currentSet=1; fetchExercises();
   });
 
-  /* ========== NAVIGAZIONE VISTE ========== */
   document.getElementById('list-btn').addEventListener('click', () => showView('list'));
   document.getElementById('back-app-btn').addEventListener('click', () => showView('app'));
 
-  /* ========== AVVIO ========== */
   showView('init');
 });
