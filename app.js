@@ -98,39 +98,51 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showExercise() {
-    const ex = exercises[currentExercise];
-    console.log('[showExercise] Dati esercizio:', ex);
-    document.getElementById('week-display').textContent      = `Settimana ${week}`;
-    document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise+1} di ${exercises.length}`;
-    document.getElementById('exercise-name').textContent    = ex.esercizio;
+  const ex = exercises[currentExercise];
 
-    // immagine
-    const img = document.getElementById('exercise-img');
-    const fileName = ex.esercizio.trim().replace(/\s+/g,'_')+'.jpg';
-    img.src = `images/${fileName}`; img.onerror = ()=>{img.src='images/default.jpg';};
+  // Titoli e contatori
+  document.getElementById('week-display').textContent      = `Settimana ${week}`;
+  document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise + 1} di ${exercises.length}`;
+  document.getElementById('exercise-name').textContent    = ex.esercizio;
 
-    // note
-    document.getElementById('note-display').textContent = `Note: ${ex.note||'ND'}`;
+  // Immagine
+  const img = document.getElementById('exercise-img');
+  const fileName = ex.esercizio.trim().replace(/\s+/g,'_') + '.jpg';
+  img.src = `images/${fileName}`;
+  img.onerror = () => { img.src = 'images/default.jpg'; };
 
-    // superset panel
-    const sp = document.getElementById('superset-panel');
-    if (ex.isSuperset) {
-      sp.style.display='block';
-      document.getElementById('sup-peso1').value = ex.lastPeso1||'';
-      document.getElementById('sup-reps1').value = ex.lastReps1||'';
-      document.getElementById('sup-peso2').value = ex.lastPeso2||'';
-      document.getElementById('sup-reps2').value = ex.lastReps2||'';
-    } else sp.style.display='none';
+  // Note
+  document.getElementById('note-display').textContent = `Note: ${ex.note || 'ND'}`;
 
-    const prev = ex.prevData || '';
-    const rac = ex.pesoRaccomandato ? `Peso raccomandato: ${ex.pesoRaccomandato}` : '';
-    document.getElementById('prev-display').innerHTML = [prev, rac].filter(Boolean).join('<br>');
-
-    document.getElementById('series-display').textContent  = `Serie ${currentSet} di ${ex.seriePreviste}`;
-    currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
-
-    renderList();
+  // Superset (se presente)
+  const sp = document.getElementById('superset-panel');
+  if (ex.isSuperset) {
+    sp.style.display = 'block';
+    document.getElementById('sup-peso1').value = ex.lastPeso1 || '';
+    document.getElementById('sup-reps1').value = ex.lastReps1 || '';
+    document.getElementById('sup-peso2').value = ex.lastPeso2 || '';
+    document.getElementById('sup-reps2').value = ex.lastReps2 || '';
+  } else {
+    sp.style.display = 'none';
   }
+
+  // Prezzo precedente e raccomandato
+  const parts = [];
+  if (ex.pesoPrecedente) {
+    parts.push(`Peso precedente: ${ex.pesoPrecedente}`);
+  }
+  if (ex.pesoRaccomandato) {
+    parts.push(`Peso raccomandato: ${ex.pesoRaccomandato}`);
+  }
+  document.getElementById('prev-display').innerHTML = parts.join('<br>');
+
+  // Serie e timer
+  document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
+  currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
+
+  // Lista esercizi laterale
+  renderList();
+}
 
 function submitSet() {
   console.log('[submitSet] Inizio funzione');
