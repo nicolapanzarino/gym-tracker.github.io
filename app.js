@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     img.src = `images/${ex.esercizio.trim().replace(/\s+/g,'_')}.jpg`;
     img.onerror = () => img.src='images/default.jpg';
 
-    document.getElementById('note-display').textContent = `Note: ${ex.note||'ND'}`;
+    document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
 
     const sp = document.getElementById('superset-panel');
     if (ex.isSuperset) {
