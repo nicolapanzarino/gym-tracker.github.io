@@ -164,6 +164,8 @@ function submitSet() {
     return;
   }
 
+  const isFirst = currentSet === 1;  // TRUE solo per la prima serie
+
   window.onSave = res => {
     console.log('[submitSet] Callback onSave ricevuta:', res);
     if (res.success) {
@@ -174,16 +176,20 @@ function submitSet() {
     console.log('[submitSet] Fine callback onSave');
   };
 
+  const params = [
+    `callback=onSave`,
+    `key=${encodeURIComponent(keyInput())}`,
+    `settimana=${week}`,
+    `peso=${encodeURIComponent(peso)}`,
+    `reps=${encodeURIComponent(reps)}`,
+    `riga=${esercizioCorrente.riga}`,
+    isFirst ? `firstSet=1` : null
+  ].filter(Boolean).join('&');
+
   const script = document.createElement('script');
-  script.src = `${WEBAPP_URL}`
-    + `?callback=onSave`
-    + `&key=${encodeURIComponent(keyInput())}`
-    + `&settimana=${week}`
-    + `&peso=${encodeURIComponent(peso)}`
-    + `&reps=${encodeURIComponent(reps)}`
-    + `&riga=${esercizioCorrente.riga}`;
-  
+  script.src = `${WEBAPP_URL}?${params}`;
   document.body.appendChild(script);
+
   console.log('[submitSet] Script JSONP aggiunto al DOM:', script.src);
   console.log('[submitSet] Fine funzione');
 }
