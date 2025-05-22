@@ -105,8 +105,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } else sp.style.display='none';
 
     const parts = [];
-    if (ex.pesoPrecedente)   parts.push(`Peso precedente: ${ex.pesoPrecedente}`);
-    if (ex.pesoRaccomandato) parts.push(`Peso raccomandato: ${ex.pesoRaccomandato}`);
+    if (ex.pesoPrecedente)   parts.push(`<strong>Peso precedente:</strong> ${ex.pesoPrecedente}`);
+    if (ex.pesoRaccomandato) parts.push(`<strong>Peso raccomandato:</strong> ${ex.pesoRaccomandato}`);
+
+    // Calcolo peso riscaldamento consigliato
+    let warmupText = '';
+    if (ex.pesoPrecedente) {
+      const match = ex.pesoPrecedente.match(/(\d+)/);
+      if (match) {
+        const warmupKg = Math.round(parseInt(match[1], 10) / 2);
+        warmupText = `<strong>Peso riscaldamento:</strong> ${warmupKg} Kg`;
+        parts.push(warmupText);
+      }
+    }
+
     document.getElementById('prev-display').innerHTML = parts.join('<br>');
 
     document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
