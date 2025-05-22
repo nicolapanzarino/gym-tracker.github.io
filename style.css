@@ -151,3 +151,29 @@ body {
   margin-top: auto;
   padding-top: 10px;
 }
+
+.peso-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.95em;
+  margin: 6px 0;
+  font-weight: 500;
+}
+
+.peso-precedente {
+  background-color: #ffe0b2; /* arancione chiaro */
+  color: #bf360c;
+}
+
+.peso-raccomandato {
+  background-color: #c8e6c9; /* verde chiaro */
+  color: #256029;
+}
+
+.peso-riscaldamento {
+  background-color: #fff9c4; /* giallo chiaro */
+  color: #7c6f00;
+}
