@@ -95,26 +95,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
 
-    const sp = document.getElementById('superset-panel');
-    if (ex.isSuperset) {
-      sp.style.display='block';
-      ['1','2'].forEach(n=>{
-        document.getElementById(`sup-peso${n}`).value = ex[`lastPeso${n}`] || '';
-        document.getElementById(`sup-reps${n}`).value = ex[`lastReps${n}`] || '';
-      });
-    } else sp.style.display='none';
-
-    const parts = [];
+  const parts = [];
   if (ex.pesoPrecedente) {
     parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
   }
   if (ex.pesoRaccomandato) {
     parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
   }
-  if (warmupText) {
-    parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupText}</span></div>`);
+
+  if (ex.pesoPrecedente) {
+    const match = ex.pesoPrecedente.match(/(\\d+)/);
+    if (match) {
+      const warmupKg = Math.round(parseInt(match[1], 10) / 2);
+      const warmupText = `${warmupKg} Kg`;
+      parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupText}</span></div>`);
+    }
   }
-    document.getElementById('prev-display').innerHTML = parts.join('<br>');
+
+  document.getElementById('prev-display').innerHTML = parts.join('');
 
     document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
     currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
