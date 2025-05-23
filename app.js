@@ -21,22 +21,67 @@ document.addEventListener('DOMContentLoaded', () => {
     listCard  .style.display = v==='list' ? 'block':'none';
   };
 
-    document.getElementById('login-btn')?.addEventListener('click', () => {
+  document.getElementById('login-btn').addEventListener('click', () => {
     const key = keyInput();
     if (!key) return alert('Inserisci chiave');
-    window.onAuth = r => r.error === 'Unauthorized' ? showView('deny') : showView('select');
+    window.onAuth = r => r.error==='Unauthorized' ? showView('deny') : showView('select');
     const s = document.createElement('script');
     s.src = `${WEBAPP_URL}?callback=onAuth&key=${encodeURIComponent(key)}`;
     document.body.appendChild(s);
   });
+  document.getElementById('retry-btn').addEventListener('click', () => location.reload());
 
-  document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
-  document.getElementById('start-btn')?.addEventListener('click', () => {
-    week = parseInt(document.getElementById('week-input').value, 10);
+  document.getElementById('start-btn').addEventListener('click', () => {
+    week = parseInt(document.getElementById('week-input').value,10);
     day  = document.getElementById('day-input').value;
     if (!week || !day) return alert('Inserisci settimana e giorno');
     fetchExercises();
   });
+
+  function fetchExercises() {
+    showView('load');
+    window.onExercises = data => {
+      if (data.error==='Unauthorized') return showView('deny');
+      exercises = data;
+      renderList();
+      showView('app');
+      showExercise();
+    };
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onExercises`
+          + `&key=${encodeURIComponent(keyInput())}`
+          + `&settimana=${week}`
+          + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(s);
+  }
+
+  function silentFetchExercises() {
+    window.onSilentExercises = d => {
+      if (d.error==='Unauthorized') return;
+      exercises = d;
+      renderList();
+    };
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onSilentExercises`
+          + `&key=${encodeURIComponent(keyInput())}`
+          + `&settimana=${week}`
+          + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(s);
+  }
+
+  const deferFetch = () => requestAnimationFrame(silentFetchExercises);
+
+  function renderList() {
+    const ul = document.getElementById('exercise-list');
+    ul.innerHTML = '';
+    exercises.forEach(ex => {
+      const li = document.createElement('li');
+      li.className = 'exercise-item';
+      li.innerHTML = `<span>${ex.esercizio}</span><span>${ex.done?'✅':'❌'}</span>`;
+      ul.appendChild(li);
+    });
+  }
+
   function showExercise() {
     const ex = exercises[currentExercise];
 
