@@ -122,14 +122,61 @@ document.addEventListener('DOMContentLoaded', () => {
         parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`);
       }
     }
-
-    document.getElementById('prev-display').innerHTML = parts.join('');
-    document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
-    currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
-    renderList();
+  function advanceExercise() {
+    if (currentSet < exercises[currentExercise].seriePreviste) {
+      currentSet++;
+    } else {
+      currentExercise++;
+      currentSet = 1;
+    }
   }
 
-    document.getElementById('save-btn')?.addEventListener('click', submitSet);
+  document.getElementById('next-set-btn').addEventListener('click', () => {
+    if (currentSet < exercises[currentExercise].seriePreviste) {
+      currentSet++; showExercise(); deferFetch();
+    } else alert('Sei già all\'ultima serie');
+  });
+
+  document.getElementById('prev-set-btn').addEventListener('click', () => {
+    if (currentSet > 1) {
+      currentSet--; showExercise(); deferFetch();
+    } else alert('Sei già alla prima serie');
+  });
+
+  document.getElementById('skip-btn').addEventListener('click', () => {
+    if (currentExercise < exercises.length-1) {
+      currentExercise++; currentSet=1;
+      showExercise(); deferFetch();
+    } else alert('🏁 Fine allenamento');
+  });
+
+  document.getElementById('skip-back-btn').addEventListener('click', () => {
+    if (currentExercise > 0) {
+      currentExercise--; currentSet=1;
+      showExercise(); deferFetch();
+    } else alert('Sei già al primo esercizio');
+  });
+
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentExercise===0) return alert('Primo esercizio');
+    if (!confirm('Cancellare il precedente?')) return;
+    const prev = exercises[currentExercise-1];
+    window.onClear = r => {
+      if (r.success) {
+        exercises[currentExercise-1].done=false;
+        currentExercise--; currentSet=1;
+        showExercise(); deferFetch();
+      } else alert('Errore cancellazione');
+    };
+    const s=document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onClear`
+        + `&key=${encodeURIComponent(keyInput())}`
+        + `&settimana=${week}&clear=true&riga=${prev.riga}`;
+    document.body.appendChild(s);
+  });
+
+  document.getElementById('save-btn').addEventListener('click', submitSet);
+  
   function submitSet() {
     const peso = document.getElementById('weight').value.trim();
     const reps = document.getElementById('reps').value.trim();
