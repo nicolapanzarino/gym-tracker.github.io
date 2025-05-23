@@ -164,16 +164,16 @@ body {
 }
 
 .peso-precedente {
-  background-color: #ffe0b2; /* arancione chiaro */
+  background-color: #ffe0b2;
   color: #bf360c;
 }
 
 .peso-raccomandato {
-  background-color: #c8e6c9; /* verde chiaro */
+  background-color: #c8e6c9;
   color: #256029;
 }
 
 .peso-riscaldamento {
-  background-color: #fff9c4; /* giallo chiaro */
+  background-color: #fff9c4;
   color: #7c6f00;
 }
