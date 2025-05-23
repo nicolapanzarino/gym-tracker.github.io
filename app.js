@@ -95,24 +95,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
 
-  const parts = [];
-  if (ex.pesoPrecedente) {
-    parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
-  }
-  if (ex.pesoRaccomandato) {
-    parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
-  }
+    const parts = [];
+    if (ex.pesoPrecedente)   parts.push(`<strong>Peso precedente:</strong> ${ex.pesoPrecedente}`);
+    if (ex.pesoRaccomandato) parts.push(`<strong>Peso raccomandato:</strong> ${ex.pesoRaccomandato}`);
 
-  if (ex.pesoPrecedente) {
-    const match = ex.pesoPrecedente.match(/(\\d+)/);
-    if (match) {
-      const warmupKg = Math.round(parseInt(match[1], 10) / 2);
-      const warmupText = `${warmupKg} Kg`;
-      parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupText}</span></div>`);
+    // Calcolo peso riscaldamento consigliato
+    let warmupText = '';
+    if (ex.pesoPrecedente) {
+      const match = ex.pesoPrecedente.match(/(\d+)/);
+      if (match) {
+        const warmupKg = Math.round(parseInt(match[1], 10) / 2);
+        warmupText = `<strong>Peso riscaldamento:</strong> ${warmupKg} Kg`;
+        parts.push(warmupText);
+      }
     }
-  }
 
-  document.getElementById('prev-display').innerHTML = parts.join('');
+    document.getElementById('prev-display').innerHTML = parts.join('<br>');
 
     document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
     currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
