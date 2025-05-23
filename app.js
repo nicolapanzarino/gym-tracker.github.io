@@ -21,16 +21,66 @@ document.addEventListener('DOMContentLoaded', () => {
     listCard  .style.display = v==='list' ? 'block':'none';
   };
 
-    document.getElementById('login-btn')?.addEventListener('click', () => {
+  document.getElementById('login-btn').addEventListener('click', () => {
     const key = keyInput();
     if (!key) return alert('Inserisci chiave');
-    window.onAuth = r => r.error === 'Unauthorized' ? showView('deny') : showView('select');
+    window.onAuth = r => r.error==='Unauthorized' ? showView('deny') : showView('select');
     const s = document.createElement('script');
     s.src = `${WEBAPP_URL}?callback=onAuth&key=${encodeURIComponent(key)}`;
     document.body.appendChild(s);
   });
+  document.getElementById('retry-btn').addEventListener('click', () => location.reload());
 
-  document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
+  document.getElementById('start-btn').addEventListener('click', () => {
+    week = parseInt(document.getElementById('week-input').value,10);
+    day  = document.getElementById('day-input').value;
+    if (!week || !day) return alert('Inserisci settimana e giorno');
+    fetchExercises();
+  });
+
+  function fetchExercises() {
+    showView('load');
+    window.onExercises = data => {
+      if (data.error==='Unauthorized') return showView('deny');
+      exercises = data;
+      renderList();
+      showView('app');
+      showExercise();
+    };
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onExercises`
+          + `&key=${encodeURIComponent(keyInput())}`
+          + `&settimana=${week}`
+          + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(s);
+  }
+
+  function silentFetchExercises() {
+    window.onSilentExercises = d => {
+      if (d.error==='Unauthorized') return;
+      exercises = d;
+      renderList();
+    };
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onSilentExercises`
+          + `&key=${encodeURIComponent(keyInput())}`
+          + `&settimana=${week}`
+          + `&giorno=${encodeURIComponent(day)}`;
+    document.body.appendChild(s);
+  }
+
+  const deferFetch = () => requestAnimationFrame(silentFetchExercises);
+
+  function renderList() {
+    const ul = document.getElementById('exercise-list');
+    ul.innerHTML = '';
+    exercises.forEach(ex => {
+      const li = document.createElement('li');
+      li.className = 'exercise-item';
+      li.innerHTML = `<span>${ex.esercizio}</span><span>${ex.done?'✅':'❌'}</span>`;
+      ul.appendChild(li);
+    });
+  }
 
   function showExercise() {
     const ex = exercises[currentExercise];
@@ -45,110 +95,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
 
-    const sp = document.getElementById('superset-panel');
-    if (ex.isSuperset) {
-      sp.style.display='block';
-      ['1','2'].forEach(n=>{
-        document.getElementById(`sup-peso${n}`).value = ex[`lastPeso${n}`] || '';
-        document.getElementById(`sup-reps${n}`).value = ex[`lastReps${n}`] || '';
-      });
-    } else sp.style.display='none';
-
     const parts = [];
-    if (ex.pesoPrecedente) {
-      parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
-    }
+    if (ex.pesoPrecedente)   parts.push(`<strong>Peso precedente:</strong> ${ex.pesoPrecedente}`);
+    if (ex.pesoRaccomandato) parts.push(`<strong>Peso raccomandato:</strong> ${ex.pesoRaccomandato}`);
 
-    if (ex.pesoRaccomandato) {
-      const match = ex.pesoRaccomandato.match(/(\d+)/);
-      const raccom = match ? `${match[1]} Kg` : ex.pesoRaccomandato;
-      parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${raccom}</span></div>`);
-    }
-
+    // Calcolo peso riscaldamento consigliato
+    let warmupText = '';
     if (ex.pesoPrecedente) {
       const match = ex.pesoPrecedente.match(/(\d+)/);
       if (match) {
         const warmupKg = Math.round(parseInt(match[1], 10) / 2);
-        parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`);
+        warmupText = `<strong>Peso riscaldamento:</strong> ${warmupKg} Kg`;
+        parts.push(warmupText);
       }
     }
 
-    document.getElementById('prev-display').innerHTML = parts.join('');
+    document.getElementById('prev-display').innerHTML = parts.join('<br>');
+
     document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
     currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
+
     renderList();
   }
-
-    document.getElementById('save-btn')?.addEventListener('click', submitSet);
-  function submitSet() {
-    const peso = document.getElementById('weight').value.trim();
-    const reps = document.getElementById('reps').value.trim();
-    const saveBtn = document.getElementById('save-btn');
-    const savingMsg = document.getElementById('saving-indicator');
-
-    if (!peso || !reps) return alert('Compila peso e ripetizioni');
-
-    if (waitingForSave) {
-      alert('Attendere il salvataggio precedente...');
-      return;
-    }
-    waitingForSave = true;
-    if (saveBtn) saveBtn.disabled = true;
-    if (savingMsg) savingMsg.style.display = 'inline';
-
-    const exCurr = exercises[currentExercise];
-    if (!exCurr || !exCurr.riga) return alert('Errore interno');
-
-    const isFirst = currentSet === 1;
-    window.onSave = r => {
-      waitingForSave = false;
-      if (saveBtn) saveBtn.disabled = false;
-      if (savingMsg) savingMsg.style.display = 'none';
-
-      if (r.success) {
-        advanceExercise();
-        showExercise();
-        deferFetch();
-        startTimer();
-      } else alert('Errore salvataggio');
-    };
-
-    const params = [
-      `callback=onSave`,
-      `key=${encodeURIComponent(keyInput())}`,
-      `settimana=${week}`,
-      `peso=${encodeURIComponent(peso)}`,
-      `reps=${encodeURIComponent(reps)}`,
-      `riga=${exCurr.riga}`,
-      isFirst ? 'firstSet=1' : null
-    ].filter(Boolean).join('&');
-
-    const s = document.createElement('script');
-    s.src = `${WEBAPP_URL}?${params}`;
-    document.body.appendChild(s);
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    document.getElementById('timer').style.display = 'block';
-    const d = document.getElementById('countdown'), start = Date.now();
-    timerInterval = setInterval(() => {
-      const rem = Math.max(currentRecTime - (Date.now() - start), 0);
-      const m = Math.floor(rem / 60000), s = Math.floor(rem / 1000) % 60, ms = rem % 1000;
-      d.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
-      if (rem <= 0) {
-        clearInterval(timerInterval);
-        document.getElementById('timer').style.display = 'none';
-      }
-    }, 33);
-  }
-
-  document.getElementById('reset-btn')?.addEventListener('click', () => {
-    if (!confirm('Annullare tutto l’allenamento?')) return;
-    currentExercise = 0;
-    currentSet = 1;
-    fetchExercises();
-  });
-
-  showView('init');
-});
