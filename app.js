@@ -122,6 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
         parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`);
       }
     }
+
+    document.getElementById('peso-info-container').innerHTML = parts.join('');
+  }
+
   function advanceExercise() {
     if (currentSet < exercises[currentExercise].seriePreviste) {
       currentSet++;
@@ -176,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('save-btn').addEventListener('click', submitSet);
-  
+
   function submitSet() {
     const peso = document.getElementById('weight').value.trim();
     const reps = document.getElementById('reps').value.trim();
