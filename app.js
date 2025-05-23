@@ -31,7 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
-
+  document.getElementById('start-btn')?.addEventListener('click', () => {
+    week = parseInt(document.getElementById('week-input').value, 10);
+    day  = document.getElementById('day-input').value;
+    if (!week || !day) return alert('Inserisci settimana e giorno');
+    fetchExercises();
+  });
   function showExercise() {
     const ex = exercises[currentExercise];
 
