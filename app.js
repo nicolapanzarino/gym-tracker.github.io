@@ -21,7 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
     listCard  .style.display = v==='list' ? 'block':'none';
   };
 
-  // ... altri handler ...
+    document.getElementById('login-btn')?.addEventListener('click', () => {
+    const key = keyInput();
+    if (!key) return alert('Inserisci chiave');
+    window.onAuth = r => r.error === 'Unauthorized' ? showView('deny') : showView('select');
+    const s = document.createElement('script');
+    s.src = `${WEBAPP_URL}?callback=onAuth&key=${encodeURIComponent(key)}`;
+    document.body.appendChild(s);
+  });
+
+  document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
 
   function showExercise() {
     const ex = exercises[currentExercise];
