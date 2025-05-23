@@ -95,35 +95,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
 
-    const sp = document.getElementById('superset-panel');
-    if (ex.isSuperset) {
-      sp.style.display='block';
-      ['1','2'].forEach(n=>{
-        document.getElementById(`sup-peso${n}`).value = ex[`lastPeso${n}`] || '';
-        document.getElementById(`sup-reps${n}`).value = ex[`lastReps${n}`] || '';
-      });
-    } else sp.style.display='none';
+  const parts = [];
+  if (ex.pesoPrecedente) {
+    parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
+  }
+  if (ex.pesoRaccomandato) {
+    parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
+  }
 
-    const parts = [];
-    if (ex.pesoPrecedente) {
-      parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
+  if (ex.pesoPrecedente) {
+    const match = ex.pesoPrecedente.match(/(\\d+)/);
+    if (match) {
+      const warmupKg = Math.round(parseInt(match[1], 10) / 2);
+      const warmupText = `${warmupKg} Kg`;
+      parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupText}</span></div>`);
     }
+  }
 
-    if (ex.pesoRaccomandato) {
-      const match = ex.pesoRaccomandato.match(/(\d+)/);
-      const raccom = match ? `${match[1]} Kg` : ex.pesoRaccomandato;
-      parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${raccom}</span></div>`);
-    }
+  document.getElementById('prev-display').innerHTML = parts.join('');
 
-    if (ex.pesoPrecedente) {
-      const match = ex.pesoPrecedente.match(/(\d+)/);
-      if (match) {
-        const warmupKg = Math.round(parseInt(match[1], 10) / 2);
-        parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`);
-      }
-    }
+    document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
+    currentRecTime = (parseInt(ex.recTime,10)||60)*1000;
 
-    document.getElementById('peso-info-container').innerHTML = parts.join('');
+    renderList();
   }
 
   function advanceExercise() {
@@ -180,13 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('save-btn').addEventListener('click', submitSet);
-
   function submitSet() {
     const peso = document.getElementById('weight').value.trim();
     const reps = document.getElementById('reps').value.trim();
-    const saveBtn = document.getElementById('save-btn');
-    const savingMsg = document.getElementById('saving-indicator');
-
     if (!peso || !reps) return alert('Compila peso e ripetizioni');
 
     if (waitingForSave) {
@@ -194,18 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     waitingForSave = true;
-    if (saveBtn) saveBtn.disabled = true;
-    if (savingMsg) savingMsg.style.display = 'inline';
 
     const exCurr = exercises[currentExercise];
     if (!exCurr || !exCurr.riga) return alert('Errore interno');
 
-    const isFirst = currentSet === 1;
+    const isFirst = currentSet===1;
     window.onSave = r => {
       waitingForSave = false;
-      if (saveBtn) saveBtn.disabled = false;
-      if (savingMsg) savingMsg.style.display = 'none';
-
       if (r.success) {
         advanceExercise();
         showExercise();
@@ -213,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
         startTimer();
       } else alert('Errore salvataggio');
     };
-
     const params = [
       `callback=onSave`,
       `key=${encodeURIComponent(keyInput())}`,
@@ -223,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `riga=${exCurr.riga}`,
       isFirst ? 'firstSet=1' : null
     ].filter(Boolean).join('&');
-
     const s = document.createElement('script');
     s.src = `${WEBAPP_URL}?${params}`;
     document.body.appendChild(s);
@@ -231,25 +214,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startTimer() {
     clearInterval(timerInterval);
-    document.getElementById('timer').style.display = 'block';
-    const d = document.getElementById('countdown'), start = Date.now();
-    timerInterval = setInterval(() => {
-      const rem = Math.max(currentRecTime - (Date.now() - start), 0);
-      const m = Math.floor(rem / 60000), s = Math.floor(rem / 1000) % 60, ms = rem % 1000;
+    document.getElementById('timer').style.display='block';
+    const d=document.getElementById('countdown'), start=Date.now();
+    timerInterval=setInterval(()=>{
+      const rem=Math.max(currentRecTime-(Date.now()-start),0);
+      const m=Math.floor(rem/60000), s=Math.floor(rem/1000)%60, ms=rem%1000;
       d.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
-      if (rem <= 0) {
+      if (rem<=0) {
         clearInterval(timerInterval);
-        document.getElementById('timer').style.display = 'none';
+        document.getElementById('timer').style.display='none';
       }
-    }, 33);
+    },33);
   }
 
-  document.getElementById('reset-btn')?.addEventListener('click', () => {
+  document.getElementById('reset-btn').addEventListener('click', () => {
     if (!confirm('Annullare tutto l’allenamento?')) return;
-    currentExercise = 0;
-    currentSet = 1;
-    fetchExercises();
+    currentExercise=0; currentSet=1; fetchExercises();
   });
+
+  document.getElementById('list-btn').addEventListener('click', () => showView('list'));
+  document.getElementById('back-app-btn').addEventListener('click', () => showView('app'));
 
   showView('init');
 });
