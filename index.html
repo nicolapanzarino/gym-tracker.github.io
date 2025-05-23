@@ -60,21 +60,23 @@
       <h3>🔀 Superset</h3>
       <div class="superset-inputs">
         <div>
-          <label>Peso 1:</label>
+          <label for="sup-peso1">Peso 1:</label>
           <input type="number" id="sup-peso1" placeholder="kg">
-          <label>Rep 1:</label>
+          <label for="sup-reps1">Rep 1:</label>
           <input type="number" id="sup-reps1" placeholder="">
         </div>
         <div>
-          <label>Peso 2:</label>
+          <label for="sup-peso2">Peso 2:</label>
           <input type="number" id="sup-peso2" placeholder="kg">
-          <label>Rep 2:</label>
+          <label for="sup-reps2">Rep 2:</label>
           <input type="number" id="sup-reps2" placeholder="">
         </div>
       </div>
     </div>
 
-    <p id="prev-display">Precedente: –</p>
+    <!-- ⚠️ Questo elemento è essenziale per evitare errori JS -->
+    <div id="prev-display">Precedente: –</div>
+
     <p id="series-display">Serie 1 di 1</p>
 
     <div class="nav-set-container">
@@ -88,6 +90,7 @@
       <input id="weight" type="number" placeholder="Peso (kg)" />
       <input id="reps"   type="number" placeholder="Ripetizioni" />
     </div>
+
     <div class="buttons-container">
       <button id="save-btn">Salva Set</button>
       <button id="reset-btn">Annulla Allenamenti</button>
