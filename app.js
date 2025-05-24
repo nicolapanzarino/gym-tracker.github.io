@@ -8,15 +8,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const keyInput = () => document.getElementById('key-input').value.trim();
 
   const showView = v => {
-    ['init', 'select', 'load', 'deny', 'app', 'list'].forEach(id => {
-      const el = document.getElementById(`${id}-card`);
-      if (el) {
-        el.style.display = v === id ? 'block' : 'none';
-      } else {
-        console.warn(`Elemento ${id}-card non trovato!`);
-      }
-    });
+  const views = {
+    init: 'init-card',
+    select: 'select-card',
+    load: 'loading-view',  // Usa id corretto
+    deny: 'deny-card',
+    app: 'app-card',
+    list: 'list-card'
   };
+
+  Object.entries(views).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = v === key ? 'block' : 'none';
+    } else {
+      console.warn(`Elemento con id '${id}' non trovato!`);
+    }
+  });
+};
 
   document.getElementById('login-btn').addEventListener('click', () => {
     const key = keyInput();
