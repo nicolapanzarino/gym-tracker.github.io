@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (ex.pesoPrecedente) {
-    const match = ex.pesoPrecedente.match(/(\\d+)/);
+    const match = ex.pesoPrecedente.match(/(\d+)/); // ✅ CORRETTO
     if (match) {
       const warmupKg = Math.round(parseInt(match[1], 10) / 2);
       const warmupText = `${warmupKg} Kg`;
@@ -173,44 +173,74 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(s);
   });
 
-  document.getElementById('save-btn').addEventListener('click', submitSet);
-  function submitSet() {
-    const peso = document.getElementById('weight').value.trim();
-    const reps = document.getElementById('reps').value.trim();
-    if (!peso || !reps) return alert('Compila peso e ripetizioni');
+document.getElementById('save-btn').addEventListener('click', submitSet);
 
-    if (waitingForSave) {
-      alert('Attendere il salvataggio precedente...');
-      return;
-    }
-    waitingForSave = true;
+function submitSet() {
+  const peso = document.getElementById('weight').value.trim();
+  const reps = document.getElementById('reps').value.trim();
 
-    const exCurr = exercises[currentExercise];
-    if (!exCurr || !exCurr.riga) return alert('Errore interno');
-
-    const isFirst = currentSet===1;
-    window.onSave = r => {
-      waitingForSave = false;
-      if (r.success) {
-        advanceExercise();
-        showExercise();
-        deferFetch();
-        startTimer();
-      } else alert('Errore salvataggio');
-    };
-    const params = [
-      `callback=onSave`,
-      `key=${encodeURIComponent(keyInput())}`,
-      `settimana=${week}`,
-      `peso=${encodeURIComponent(peso)}`,
-      `reps=${encodeURIComponent(reps)}`,
-      `riga=${exCurr.riga}`,
-      isFirst ? 'firstSet=1' : null
-    ].filter(Boolean).join('&');
-    const s = document.createElement('script');
-    s.src = `${WEBAPP_URL}?${params}`;
-    document.body.appendChild(s);
+  if (!peso || !reps) {
+    alert('Compila peso e ripetizioni');
+    return;
   }
+
+  if (waitingForSave) {
+    alert('Attendere il salvataggio precedente...');
+    return;
+  }
+
+  const exCurr = exercises[currentExercise];
+
+  if (!exCurr || !exCurr.riga) {
+    console.error('Errore interno: dati esercizio non validi', exCurr);
+    alert('Errore interno: esercizio non definito correttamente.');
+    return;
+  }
+
+  waitingForSave = true;
+
+  const timeout = setTimeout(() => {
+    if (waitingForSave) {
+      waitingForSave = false;
+      alert('Timeout: riprova il salvataggio.');
+    }
+  }, 10000);
+
+  const isFirst = currentSet === 1;
+  window.onSave = r => {
+    clearTimeout(timeout);
+    waitingForSave = false;
+
+    if (r.success) {
+      advanceExercise();
+      showExercise();
+      deferFetch();
+      startTimer();
+    } else {
+      console.error('Errore salvataggio:', r);
+      alert(`Errore salvataggio: ${r.error || 'Problema sconosciuto'}`);
+    }
+  };
+
+  const params = [
+    `callback=onSave`,
+    `key=${encodeURIComponent(keyInput())}`,
+    `settimana=${week}`,
+    `peso=${encodeURIComponent(peso)}`,
+    `reps=${encodeURIComponent(reps)}`,
+    `riga=${exCurr.riga}`,
+    isFirst ? 'firstSet=1' : null
+  ].filter(Boolean).join('&');
+
+  const s = document.createElement('script');
+  s.onerror = () => {
+    clearTimeout(timeout);
+    waitingForSave = false;
+    alert('Errore caricamento script. Verifica la connessione.');
+  };
+  s.src = `${WEBAPP_URL}?${params}`;
+  document.body.appendChild(s);
+}
 
   function startTimer() {
     clearInterval(timerInterval);
