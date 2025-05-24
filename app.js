@@ -9,7 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showView = v => {
     ['init', 'select', 'load', 'deny', 'app', 'list'].forEach(id => {
-      document.getElementById(`${id}-card`).style.display = v === id ? 'block' : 'none';
+      const el = document.getElementById(`${id}-card`);
+      if (el) {
+        el.style.display = v === id ? 'block' : 'none';
+      } else {
+        console.warn(`Elemento ${id}-card non trovato!`);
+      }
     });
   };
 
@@ -142,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('save-btn').addEventListener('click', submitSet);
 
-  document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById('reset-btn').addEventListener('click',        () => {
     if (confirm('Annullare tutto l’allenamento?')) {
       currentExercise = 0; currentSet = 1;
       fetchExercises();
