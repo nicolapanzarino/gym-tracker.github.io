@@ -110,49 +110,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 10000);
 
     window.onSave = r => {
-      clearTimeout(timeout);
-      waitingForSave = false;
-      if (r.success) {
-        advanceExercise();
-        showExercise();
-        startTimer();
-      } else {
-        alert(`Errore salvataggio: ${r.error || 'Sconosciuto'}`);
-      }
-    };
+  clearTimeout(timeout);
+  waitingForSave = false;
+  if (r.success) {
+    const prevExercise = currentExercise;
+    const prevSet = currentSet;
 
-    const params = `callback=onSave&key=${encodeURIComponent(keyInput())}&settimana=${week}&peso=${encodeURIComponent(peso)}&reps=${encodeURIComponent(reps)}&riga=${exCurr.riga}&firstSet=${currentSet === 1 ? 1 : 0}`;
-    loadScript(`${WEBAPP_URL}?${params}`);
-  }
+    advanceExercise();
+    showExercise();
 
-  function advanceExercise() {
-    if (currentSet < exercises[currentExercise].seriePreviste) currentSet++;
-    else {
-      currentExercise++;
-      currentSet = 1;
+    // Avvia il timer solo se si rimane nello stesso esercizio
+    if (currentExercise === prevExercise && currentSet !== 1) {
+      startTimer();
     }
+  } else {
+    alert(`Errore salvataggio: ${r.error || 'Sconosciuto'}`);
   }
+};
 
-  function startTimer() {
-    clearInterval(timerInterval);
-    const timerEl = document.getElementById('timer');
-    const countdown = document.getElementById('countdown');
-    timerEl.style.display = 'block';
-    const end = Date.now() + currentRecTime;
+const params = `callback=onSave&key=${encodeURIComponent(keyInput())}&settimana=${week}&peso=${encodeURIComponent(peso)}&reps=${encodeURIComponent(reps)}&riga=${exCurr.riga}&firstSet=${currentSet === 1 ? 1 : 0}`;
+loadScript(`${WEBAPP_URL}?${params}`);
 
-    timerInterval = setInterval(() => {
-      const rem = end - Date.now();
-      if (rem <= 0) {
-        clearInterval(timerInterval);
-        timerEl.style.display = 'none';
-        return;
-      }
-      const m = String(Math.floor(rem / 60000)).padStart(2, '0');
-      const s = String(Math.floor((rem % 60000) / 1000)).padStart(2, '0');
-      const ms = String(rem % 1000).padStart(3, '0');
-      countdown.textContent = `${m}:${s}.${ms}`;
-    }, 33);
+function advanceExercise() {
+  if (currentSet < exercises[currentExercise].seriePreviste) {
+    currentSet++;
+  } else {
+    currentExercise++;
+    currentSet = 1;
   }
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  const timerEl = document.getElementById('timer');
+  const countdown = document.getElementById('countdown');
+  timerEl.style.display = 'block';
+  const end = Date.now() + currentRecTime;
+
+  timerInterval = setInterval(() => {
+    const rem = end - Date.now();
+    if (rem <= 0) {
+      clearInterval(timerInterval);
+      timerEl.style.display = 'none';
+      return;
+    }
+    const m = String(Math.floor(rem / 60000)).padStart(2, '0');
+    const s = String(Math.floor((rem % 60000) / 1000)).padStart(2, '0');
+    const ms = String(rem % 1000).padStart(3, '0');
+    countdown.textContent = `${m}:${s}.${ms}`;
+  }, 33);
+}
 
   document.getElementById('save-btn').addEventListener('click', submitSet);
 
