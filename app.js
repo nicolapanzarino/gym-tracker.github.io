@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('retry-btn').addEventListener('click', () => location.reload());
-
   document.getElementById('start-btn').addEventListener('click', () => {
     week = parseInt(document.getElementById('week-input').value, 10);
     day = document.getElementById('day-input').value;
@@ -73,14 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
   function showExercise() {
     const ex = exercises[currentExercise];
     if (!ex) return alert('Allenamento terminato o dati mancanti.');
+
+    // Dati principali
     document.getElementById('week-display').textContent = `Settimana ${week}`;
     document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise + 1} di ${exercises.length}`;
     document.getElementById('exercise-name').textContent = ex.esercizio;
     document.getElementById('exercise-img').src = `images/${ex.esercizio.trim().replace(/\s+/g, '_')}.jpg`;
     document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
+
+    // Peso precedente, raccomandato e riscaldamento
     const parts = [];
-    if (ex.pesoPrecedente) parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
-    if (ex.pesoRaccomandato) parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
+    if (ex.pesoPrecedente) {
+      parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
+      const match = ex.pesoPrecedente.match(/(\d+)/);
+      if (match) {
+        const warmupKg = Math.round(parseInt(match[1], 10) / 2);
+        parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`);
+      }
+    }
+    if (ex.pesoRaccomandato) {
+      parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
+    }
+
     document.getElementById('prev-display').innerHTML = parts.join('');
     document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
     currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
@@ -109,9 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevExercise = currentExercise;
         advanceExercise();
         showExercise();
-        if (currentExercise === prevExercise && currentSet !== 1) {
-          startTimer();
-        }
+        if (currentExercise === prevExercise && currentSet !== 1) startTimer();
       } else {
         alert(`Errore salvataggio: ${r.error || 'Sconosciuto'}`);
       }
@@ -154,18 +165,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSet < exercises[currentExercise].seriePreviste) {
       currentSet++;
       showExercise();
-    } else {
-      alert('Sei già all\'ultima serie');
-    }
+    } else alert('Sei già all\'ultima serie');
   });
 
   document.getElementById('prev-set-btn').addEventListener('click', () => {
     if (currentSet > 1) {
       currentSet--;
       showExercise();
-    } else {
-      alert('Sei già alla prima serie');
-    }
+    } else alert('Sei già alla prima serie');
   });
 
   document.getElementById('skip-btn').addEventListener('click', () => {
@@ -173,9 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentExercise++;
       currentSet = 1;
       showExercise();
-    } else {
-      alert('🏁 Fine allenamento');
-    }
+    } else alert('🏁 Fine allenamento');
   });
 
   document.getElementById('skip-back-btn').addEventListener('click', () => {
@@ -183,9 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentExercise--;
       currentSet = 1;
       showExercise();
-    } else {
-      alert('Primo esercizio');
-    }
+    } else alert('Primo esercizio');
   });
 
   document.getElementById('save-btn').addEventListener('click', submitSet);
