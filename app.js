@@ -90,8 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
         parts.push(`<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`);
       }
     }
+
     if (ex.pesoRaccomandato) {
-      parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
+      const matchRec = ex.pesoRaccomandato.match(/(\d+)/);
+      const recKg = matchRec ? `${matchRec[1]} Kg` : ex.pesoRaccomandato;
+      parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${recKg}</span></div>`);
     }
 
     document.getElementById('prev-display').innerHTML = parts.join('');
