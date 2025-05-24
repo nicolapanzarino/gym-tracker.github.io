@@ -71,21 +71,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showExercise() {
-    const ex = exercises[currentExercise];
-    if (!ex) return alert('Allenamento terminato o dati mancanti.');
-    document.getElementById('week-display').textContent = `Settimana ${week}`;
-    document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise + 1} di ${exercises.length}`;
-    document.getElementById('exercise-name').textContent = ex.esercizio;
-    document.getElementById('exercise-img').src = `images/${ex.esercizio.trim().replace(/\s+/g, '_')}.jpg`;
-    document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
-    const parts = [];
-    if (ex.pesoPrecedente) parts.push(`<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`);
-    if (ex.pesoRaccomandato) parts.push(`<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`);
-    document.getElementById('prev-display').innerHTML = parts.join('');
-    document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
-    currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
-    renderList();
+  const ex = exercises[currentExercise];
+  if (!ex) return alert('Allenamento terminato o dati mancanti.');
+
+  document.getElementById('week-display').textContent = `Settimana ${week}`;
+  document.getElementById('exercise-counter').textContent = `Esercizio ${currentExercise + 1} di ${exercises.length}`;
+  document.getElementById('exercise-name').textContent = ex.esercizio;
+  document.getElementById('exercise-img').src = `images/${ex.esercizio.trim().replace(/\s+/g, '_')}.jpg`;
+  document.getElementById('note-display').textContent = ex.note ? `Note: ${ex.note}` : 'Note: nessuna nota presente';
+
+  const parts = [];
+  if (ex.pesoPrecedente) {
+    parts.push(
+      `<div class="peso-info peso-precedente"><span>Peso precedente:</span><span>${ex.pesoPrecedente}</span></div>`
+    );
+    // Calcolo peso riscaldamento
+    const match = ex.pesoPrecedente.match(/(\d+)/);
+    if (match) {
+      const warmupKg = Math.round(parseInt(match[1], 10) / 2);
+      parts.push(
+        `<div class="peso-info peso-riscaldamento"><span>Peso riscaldamento:</span><span>${warmupKg} Kg</span></div>`
+      );
+    }
   }
+  if (ex.pesoRaccomandato) {
+    parts.push(
+      `<div class="peso-info peso-raccomandato"><span>Peso raccomandato:</span><span>${ex.pesoRaccomandato}</span></div>`
+    );
+  }
+
+  document.getElementById('prev-display').innerHTML = parts.join('');
+  document.getElementById('series-display').textContent = `Serie ${currentSet} di ${ex.seriePreviste}`;
+  currentRecTime = (parseInt(ex.recTime, 10) || 60) * 1000;
+
+  renderList();
+}
 
   function submitSet() {
     const peso = document.getElementById('weight').value.trim();
